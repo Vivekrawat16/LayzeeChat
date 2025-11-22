@@ -91,8 +91,8 @@ const ChatRoom = () => {
 
             {/* Main Content */}
             <div className="flex-1 flex min-h-0">
-                {/* Left Sidebar: Videos - INCREASED SIZE */}
-                <div className="flex-[3] bg-gray-100 dark:bg-gray-950 p-3 flex flex-col border-r border-gray-200 dark:border-gray-800">
+                {/* Left Sidebar: Videos - HALF SCREEN */}
+                <div className="flex-1 bg-gray-100 dark:bg-gray-950 p-3 flex flex-col border-r border-gray-200 dark:border-gray-800">
                     <VideoContainer
                         localStream={stream}
                         myVideoRef={myVideo}
@@ -101,8 +101,8 @@ const ChatRoom = () => {
                     />
                 </div>
 
-                {/* Right Content: Chat & Controls - REDUCED SIZE */}
-                <div className="flex-1 min-w-[300px] max-w-[400px] flex flex-col bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800">
+                {/* Right Content: Chat & Controls - HALF SCREEN */}
+                <div className="flex-1 flex flex-col bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800">
 
                     {/* Chat Area */}
                     <div className="flex-1 overflow-hidden relative">
