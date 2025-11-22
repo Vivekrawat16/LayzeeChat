@@ -34,12 +34,11 @@ module.exports = (io) => {
                 }
             }
 
-            // If no tag match found (or no tags provided), and we are willing to match randomly (empty tags implies random/fallback)
-            if (partnerIndex === -1 && tags.length === 0) {
-                // Random match: Take the longest waiting user
-                if (queue.length > 0) {
-                    partnerIndex = 0;
-                }
+            // If no tag match found, try random matching with anyone in queue
+            if (partnerIndex === -1 && queue.length > 0) {
+                // Random match: Take the longest waiting user (first in queue)
+                partnerIndex = 0;
+                matchedTag = null; // No common tag
             }
 
             if (partnerIndex !== -1) {
