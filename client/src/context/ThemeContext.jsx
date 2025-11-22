@@ -8,8 +8,9 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }) => {
     const [theme, setTheme] = useState(
-        localStorage.getItem('theme') || 'dark' // Default to dark
+        localStorage.getItem('theme') || 'light' // Default to light
     );
+
 
     useEffect(() => {
         const root = window.document.documentElement;

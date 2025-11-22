@@ -201,7 +201,7 @@ export const SocketProvider = ({ children }) => {
     };
 
 
-    const startChat = async () => {
+    const startChat = async (tags = []) => {
         try {
             const currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             setStream(currentStream);

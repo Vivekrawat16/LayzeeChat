@@ -1,16 +1,16 @@
 import React from 'react';
-import { Mic, MicOff, Send, Flag } from 'lucide-react';
+import { Send, Flag } from 'lucide-react';
+
 
 const Controls = ({
     onNext,
-    onToggleAudio,
-    isAudioEnabled,
     isSearching,
     onReport,
     onSendMessage,
     messageInput,
     setMessageInput
 }) => {
+
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -20,15 +20,16 @@ const Controls = ({
     };
 
     return (
-        <div className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 p-2 bg-gray-50 border-t border-gray-200">
+
 
             {/* Start/Next Button */}
             <button
                 onClick={onNext}
                 disabled={isSearching}
                 className={`px-6 py-3 font-bold text-white rounded-lg shadow-sm transition-all uppercase tracking-wide ${isSearching
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
                     }`}
             >
                 {isSearching ? 'Stop' : 'Start'}
@@ -55,18 +56,6 @@ const Controls = ({
                 <Send className="w-6 h-6" />
             </button>
 
-            {/* Mic Toggle (Optional, kept small) */}
-            <button
-                onClick={onToggleAudio}
-                className={`p-3 rounded-full transition-all ${isAudioEnabled
-                        ? 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
-                        : 'text-red-500 bg-red-50 hover:bg-red-100'
-                    }`}
-                title={isAudioEnabled ? "Mute Mic" : "Unmute Mic"}
-            >
-                {isAudioEnabled ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
-            </button>
-
             {/* Report Button */}
             <button
                 onClick={onReport}
@@ -77,6 +66,7 @@ const Controls = ({
             </button>
 
         </div>
+
     );
 };
 
