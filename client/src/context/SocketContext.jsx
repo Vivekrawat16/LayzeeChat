@@ -15,7 +15,8 @@ const SocketContext = createContext();
 // Initialize socket
 // If in production (served from same origin), use relative path. 
 // If dev, use localhost:5000.
-const socket = io(process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5000');
+const socket = io(import.meta.env.PROD ? '/' : 'http://localhost:5000');
+
 
 
 export const useSocket = () => useContext(SocketContext);
