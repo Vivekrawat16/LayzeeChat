@@ -12,7 +12,11 @@ window.Buffer = [];
 const SocketContext = createContext();
 
 // Initialize socket
-const socket = io('http://localhost:5000'); // TODO: Env var
+// Initialize socket
+// If in production (served from same origin), use relative path. 
+// If dev, use localhost:5000.
+const socket = io(process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5000');
+
 
 export const useSocket = () => useContext(SocketContext);
 
