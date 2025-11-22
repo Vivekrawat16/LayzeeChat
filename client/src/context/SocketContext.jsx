@@ -89,7 +89,14 @@ export const SocketProvider = ({ children }) => {
             initiator,
             trickle: false,
             stream: currentStream,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            }
         });
+
 
         peer.on('signal', (signal) => {
             socket.emit('signal', { signal, to: partnerId });
