@@ -29,6 +29,9 @@ export const SocketProvider = ({ children }) => {
     const [isSearching, setIsSearching] = useState(false);
     const [messages, setMessages] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState(0);
+    const [matchedTag, setMatchedTag] = useState(null);
+    const searchTimeoutRef = useRef(null);
+
 
 
     const myVideo = useRef();
@@ -43,11 +46,20 @@ export const SocketProvider = ({ children }) => {
         });
 
 
-        socket.on('partnerFound', ({ partnerId, initiator }) => {
+        socket.on('partnerFound', ({ partnerId, initiator, matchedTag }) => {
             setIsSearching(false);
             setPartnerId(partnerId);
+            setMatchedTag(matchedTag);
+
+            // Clear fallback timeout if it exists
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+                searchTimeoutRef.current = null;
+            }
+
             // initiatePeer is called in the other effect
         });
+
 
         socket.on('signal', ({ signal, from }) => {
             if (connectionRef.current) {
@@ -75,11 +87,20 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (!stream) return;
 
-        const handlePartnerFound = ({ partnerId, initiator }) => {
+        const handlePartnerFound = ({ partnerId, initiator, matchedTag }) => {
             setIsSearching(false);
             setPartnerId(partnerId);
+            setMatchedTag(matchedTag);
+
+            // Clear fallback timeout if it exists
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+                searchTimeoutRef.current = null;
+            }
+
             initiatePeer(partnerId, initiator, stream);
         };
+
 
         socket.on('partnerFound', handlePartnerFound);
 
@@ -121,15 +142,29 @@ export const SocketProvider = ({ children }) => {
         setCallAccepted(true);
     };
 
-    const findPartner = () => {
+    const findPartner = (tags = []) => {
         if (stream) {
             setIsSearching(true);
+            setMatchedTag(null);
             resetCall();
-            socket.emit('findPartner');
+
+            socket.emit('findPartner', { tags });
+
+            // If searching with tags, set a fallback timeout
+            if (tags.length > 0) {
+                if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+                searchTimeoutRef.current = setTimeout(() => {
+                    console.log("No tag match found, falling back to random...");
+                    socket.emit('findPartner', { tags: [] }); // Fallback to random
+                }, 5000);
+            }
+
         } else {
             alert("Please allow camera/microphone access first.");
         }
     };
+
 
     const sendMessage = (text) => {
         if (partnerId) {
@@ -150,17 +185,24 @@ export const SocketProvider = ({ children }) => {
     const resetCall = () => {
         setPartnerId(null);
         setCallAccepted(false);
+        setMatchedTag(null);
         setMessages([]);
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+            searchTimeoutRef.current = null;
+        }
+
         if (connectionRef.current) {
             connectionRef.current.destroy();
             connectionRef.current = null;
         }
     };
 
-    const nextPartner = () => {
+    const nextPartner = (tags = []) => {
         resetCall();
-        findPartner();
+        findPartner(tags);
     };
+
 
     const startChat = async () => {
         try {
@@ -173,11 +215,210 @@ export const SocketProvider = ({ children }) => {
             // So we bypass the check or pass true
             setIsSearching(true);
             resetCall();
-            socket.emit('findPartner');
+
+            // Initial search with provided tags
+            findPartner(tags);
+
         } catch (err) {
             console.error('Failed to get stream', err);
         }
     };
+
+
+    return (
+        <SocketContext.Provider value={{
+            socket,
+            stream,
+            me,
+            partnerId,
+            callAccepted,
+            isSearching,
+            messages,
+            myVideo,
+```
+        socket.on('userCount', (count) => {
+            setOnlineUsers(count);
+        });
+
+
+        socket.on('partnerFound', ({ partnerId, initiator, matchedTag }) => {
+            setIsSearching(false);
+            setPartnerId(partnerId);
+            setMatchedTag(matchedTag);
+            
+            // Clear fallback timeout if it exists
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+                searchTimeoutRef.current = null;
+            }
+            
+            // initiatePeer is called in the other effect
+        });
+
+
+        socket.on('signal', ({ signal, from }) => {
+            if (connectionRef.current) {
+                connectionRef.current.signal(signal);
+            }
+        });
+
+        socket.on('message', ({ text }) => {
+            setMessages(prev => [...prev, { text, isMe: false }]);
+        });
+
+        socket.on('partnerDisconnected', () => {
+            resetCall();
+        });
+
+        return () => {
+            socket.off('partnerFound');
+            socket.off('signal');
+            socket.off('message');
+            socket.off('partnerDisconnected');
+        };
+    }, []);
+
+    // Refactored socket listener to access current stream
+    useEffect(() => {
+        if (!stream) return;
+
+        const handlePartnerFound = ({ partnerId, initiator, matchedTag }) => {
+            setIsSearching(false);
+            setPartnerId(partnerId);
+            setMatchedTag(matchedTag);
+            
+             // Clear fallback timeout if it exists
+             if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+                searchTimeoutRef.current = null;
+            }
+
+            initiatePeer(partnerId, initiator, stream);
+        };
+
+
+        socket.on('partnerFound', handlePartnerFound);
+
+        return () => {
+            socket.off('partnerFound', handlePartnerFound);
+        };
+    }, [stream]);
+
+
+    const initiatePeer = (partnerId, initiator, currentStream) => {
+        const peer = new Peer({
+            initiator,
+            trickle: false,
+            stream: currentStream,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' }
+                ]
+            }
+        });
+
+
+        peer.on('signal', (signal) => {
+            socket.emit('signal', { signal, to: partnerId });
+        });
+
+        peer.on('stream', (remoteStream) => {
+            if (userVideo.current) {
+                userVideo.current.srcObject = remoteStream;
+            }
+        });
+
+        peer.on('error', (err) => {
+            console.error('Peer error:', err);
+        });
+
+        connectionRef.current = peer;
+        setCallAccepted(true);
+    };
+
+    const findPartner = (tags = []) => {
+        if (stream) {
+            setIsSearching(true);
+            setMatchedTag(null);
+            resetCall();
+            
+            socket.emit('findPartner', { tags });
+
+            // If searching with tags, set a fallback timeout
+            if (tags.length > 0) {
+                if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+                
+                searchTimeoutRef.current = setTimeout(() => {
+                    console.log("No tag match found, falling back to random...");
+                    socket.emit('findPartner', { tags: [] }); // Fallback to random
+                }, 5000);
+            }
+
+        } else {
+            alert("Please allow camera/microphone access first.");
+        }
+    };
+
+
+    const sendMessage = (text) => {
+        if (partnerId) {
+            const filteredText = filterMessage(text);
+            socket.emit('message', { text: filteredText, to: partnerId });
+            setMessages(prev => [...prev, { text: filteredText, isMe: true }]);
+        }
+    };
+
+    const reportUser = () => {
+        if (partnerId) {
+            socket.emit('report', { partnerId });
+            nextPartner();
+            alert("User reported. Finding a new partner.");
+        }
+    };
+
+    const resetCall = () => {
+        setPartnerId(null);
+        setCallAccepted(false);
+        setMatchedTag(null);
+        setMessages([]);
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+            searchTimeoutRef.current = null;
+        }
+
+        if (connectionRef.current) {
+            connectionRef.current.destroy();
+            connectionRef.current = null;
+        }
+    };
+
+    const nextPartner = (tags = []) => {
+        resetCall();
+        findPartner(tags);
+    };
+
+
+    const startChat = async () => {
+        try {
+            const currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            setStream(currentStream);
+            if (myVideo.current) {
+                myVideo.current.srcObject = currentStream;
+            }
+            // We can't rely on 'stream' state being updated immediately for findPartner check
+            // So we bypass the check or pass true
+            setIsSearching(true);
+            resetCall();
+            
+            // Initial search with provided tags
+            findPartner(tags);
+            
+        } catch (err) {
+            console.error('Failed to get stream', err);
+        }
+    };
+
 
     return (
         <SocketContext.Provider value={{
@@ -194,9 +435,12 @@ export const SocketProvider = ({ children }) => {
             sendMessage,
             nextPartner,
             reportUser,
-            startChat
+            startChat,
+            onlineUsers,
+            matchedTag
         }}>
             {children}
         </SocketContext.Provider>
     );
 };
+```
