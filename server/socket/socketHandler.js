@@ -5,6 +5,10 @@ module.exports = (io) => {
     io.on('connection', (socket) => {
         console.log('New User Connected:', socket.id);
 
+        // Broadcast user count
+        io.emit('userCount', io.engine.clientsCount);
+
+
         socket.on('findPartner', () => {
             // Cleanup previous pairing if any
             const previousPartner = pairings.get(socket.id);
@@ -40,20 +44,6 @@ module.exports = (io) => {
             io.to(to).emit('message', { text, from: socket.id });
         });
 
-        socket.on('report', ({ partnerId }) => {
-            console.log(`User ${socket.id} reported ${partnerId}`);
-            // Here we could log to DB, ban user, etc.
-        });
-
-        socket.on('disconnect', () => {
-            console.log('User Disconnected:', socket.id);
-            queue = queue.filter(id => id !== socket.id);
-            const partnerId = pairings.get(socket.id);
-            if (partnerId) {
-                io.to(partnerId).emit('partnerDisconnected');
-                pairings.delete(partnerId);
-                pairings.delete(socket.id);
-            }
-        });
     });
+});
 };

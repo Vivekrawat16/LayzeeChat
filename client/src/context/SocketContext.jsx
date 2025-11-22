@@ -29,16 +29,6 @@ export const SocketProvider = ({ children }) => {
     const connectionRef = useRef();
 
     useEffect(() => {
-        // Get User Media
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then((currentStream) => {
-                setStream(currentStream);
-                if (myVideo.current) {
-                    myVideo.current.srcObject = currentStream;
-                }
-            })
-            .catch(err => console.error('Failed to get stream', err));
-
         socket.on('me', (id) => setMe(id));
 
         socket.on('partnerFound', ({ partnerId, initiator }) => {
@@ -153,6 +143,23 @@ export const SocketProvider = ({ children }) => {
         findPartner();
     };
 
+    const startChat = async () => {
+        try {
+            const currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            setStream(currentStream);
+            if (myVideo.current) {
+                myVideo.current.srcObject = currentStream;
+            }
+            // We can't rely on 'stream' state being updated immediately for findPartner check
+            // So we bypass the check or pass true
+            setIsSearching(true);
+            resetCall();
+            socket.emit('findPartner');
+        } catch (err) {
+            console.error('Failed to get stream', err);
+        }
+    };
+
     return (
         <SocketContext.Provider value={{
             socket,
@@ -167,7 +174,8 @@ export const SocketProvider = ({ children }) => {
             findPartner,
             sendMessage,
             nextPartner,
-            reportUser
+            reportUser,
+            startChat
         }}>
             {children}
         </SocketContext.Provider>

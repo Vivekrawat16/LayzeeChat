@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { User } from 'lucide-react';
 
-const VideoContainer = ({ localStream, isVideoEnabled, myVideoRef, userVideoRef, callAccepted }) => {
+const VideoContainer = ({ localStream, myVideoRef, userVideoRef, callAccepted }) => {
 
-    // Effect to attach local stream to video element
     useEffect(() => {
         if (myVideoRef.current && localStream) {
             myVideoRef.current.srcObject = localStream;
@@ -11,9 +10,9 @@ const VideoContainer = ({ localStream, isVideoEnabled, myVideoRef, userVideoRef,
     }, [localStream, myVideoRef]);
 
     return (
-        <div className="relative flex-1 w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
-            {/* Remote Video (Main) */}
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+        <div className="flex flex-col h-full gap-4">
+            {/* Remote Video (Top) */}
+            <div className="relative flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-700 shadow-md">
                 <video
                     playsInline
                     autoPlay
@@ -21,25 +20,31 @@ const VideoContainer = ({ localStream, isVideoEnabled, myVideoRef, userVideoRef,
                     className={`w-full h-full object-cover ${!callAccepted ? 'hidden' : ''}`}
                 />
                 {!callAccepted && (
-                    <div className="flex flex-col items-center text-gray-500 animate-pulse">
-                        <User className="w-20 h-20 mb-4 opacity-50" />
-                        <p className="text-lg font-medium">Searching for a stranger...</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-2">
+                            <User className="w-8 h-8 opacity-50" />
+                        </div>
+                        <p className="text-sm font-medium">Partner Camera</p>
                     </div>
                 )}
+                {/* Report Flag could go here overlaying the video */}
             </div>
 
-            {/* Local Video (Picture-in-Picture) */}
-            <div className="absolute top-4 right-4 w-32 h-48 md:w-48 md:h-72 bg-gray-800 rounded-xl overflow-hidden border-2 border-gray-700 shadow-lg transition-all hover:scale-105 z-10">
+            {/* Local Video (Bottom) */}
+            <div className="relative flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-700 shadow-md">
                 <video
                     playsInline
                     muted
                     autoPlay
                     ref={myVideoRef}
-                    className={`w-full h-full object-cover transform scale-x-[-1] ${!localStream || !isVideoEnabled ? 'hidden' : ''}`}
+                    className={`w-full h-full object-cover transform scale-x-[-1] ${!localStream ? 'hidden' : ''}`}
                 />
-                {(!localStream || !isVideoEnabled) && (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                        <User className="w-10 h-10 text-gray-600" />
+                {!localStream && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-2">
+                            <User className="w-8 h-8 opacity-50" />
+                        </div>
+                        <p className="text-sm font-medium">Your Camera</p>
                     </div>
                 )}
             </div>
