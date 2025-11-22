@@ -29,9 +29,12 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/layzeechat'
 socketHandler(io);
 
 // Routes
-app.get('/', (req, res) => {
-  res.send('LayzeeChat API is running...');
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/', (req, res) => {
+    res.send('LayzeeChat API is running...');
+  });
+}
+
 
 // Serve static assets in production
 const path = require('path');
