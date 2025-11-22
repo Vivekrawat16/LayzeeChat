@@ -17,8 +17,10 @@ const ChatRoom = () => {
         messages,
         sendMessage,
         reportUser,
-        startChat
+        startChat,
+        onlineUsers
     } = useSocket();
+
 
     const [isAudioEnabled, setIsAudioEnabled] = useState(true);
     const [messageInput, setMessageInput] = useState('');
@@ -70,8 +72,9 @@ const ChatRoom = () => {
                 </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                     <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    1,243 online
+                    {onlineUsers} online
                 </div>
+
             </header>
 
             {/* Main Content */}

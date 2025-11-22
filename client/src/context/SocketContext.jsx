@@ -23,6 +23,8 @@ export const SocketProvider = ({ children }) => {
     const [callAccepted, setCallAccepted] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
     const [messages, setMessages] = useState([]);
+    const [onlineUsers, setOnlineUsers] = useState(0);
+
 
     const myVideo = useRef();
     const userVideo = useRef();
@@ -30,6 +32,11 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         socket.on('me', (id) => setMe(id));
+
+        socket.on('userCount', (count) => {
+            setOnlineUsers(count);
+        });
+
 
         socket.on('partnerFound', ({ partnerId, initiator }) => {
             setIsSearching(false);
