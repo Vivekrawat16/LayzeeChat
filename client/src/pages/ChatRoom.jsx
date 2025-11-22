@@ -4,6 +4,9 @@ import VideoContainer from '../components/VideoContainer';
 import ChatBox from '../components/ChatBox';
 import Controls from '../components/Controls';
 import { useSocket } from '../context/SocketContext';
+import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
+
 
 const ChatRoom = () => {
     const {
@@ -23,7 +26,9 @@ const ChatRoom = () => {
         matchedTag
     } = useSocket();
 
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
+
     const tags = location.state?.tags || [];
 
     const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -74,12 +79,20 @@ const ChatRoom = () => {
                     <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
                     {onlineUsers} online
                 </div>
+
+                <button
+                    onClick={toggleTheme}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                    {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-indigo-600" />}
+                </button>
             </header>
+
 
             {/* Main Content */}
             <div className="flex-1 flex min-h-0">
-                {/* Left Sidebar: Videos */}
-                <div className="w-full md:w-80 lg:w-96 bg-gray-100 dark:bg-gray-950 p-3 flex flex-col border-r border-gray-200 dark:border-gray-800">
+                {/* Left Sidebar: Videos - INCREASED SIZE */}
+                <div className="flex-[3] bg-gray-100 dark:bg-gray-950 p-3 flex flex-col border-r border-gray-200 dark:border-gray-800">
                     <VideoContainer
                         localStream={stream}
                         myVideoRef={myVideo}
@@ -88,8 +101,9 @@ const ChatRoom = () => {
                     />
                 </div>
 
-                {/* Right Content: Chat & Controls */}
-                <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900">
+                {/* Right Content: Chat & Controls - REDUCED SIZE */}
+                <div className="flex-1 min-w-[300px] max-w-[400px] flex flex-col bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800">
+
                     {/* Chat Area */}
                     <div className="flex-1 overflow-hidden relative">
                         <ChatBox

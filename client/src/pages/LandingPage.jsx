@@ -1,13 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, MessageSquare, Hash } from 'lucide-react';
+import { Video, MessageSquare, Hash, Sun, Moon, ChevronDown, ChevronUp, ShieldAlert, HelpCircle } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { theme, toggleTheme } = useTheme();
     const [selectedTags, setSelectedTags] = useState([]);
     const [customTagInput, setCustomTagInput] = useState('');
+    const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
     const availableTags = ["Gaming", "Coding", "Music", "Movies", "Travel", "Fitness", "Tech", "Art"];
+
+    const faqs = [
+        { question: "Is it really anonymous?", answer: "Yes! We don't ask for your name, email, or login. You are just a random stranger to everyone else." },
+        { question: "Can I report bad behavior?", answer: "Absolutely. Use the 'Report' button in the chat to flag inappropriate users. We take safety seriously." },
+        { question: "Does it work on mobile?", answer: "Yes, LayzeeChat is fully responsive and works great on phones and tablets." },
+        { question: "Is it free?", answer: "100% free. No hidden costs, no premium subscriptions." }
+    ];
+
+    const rules = [
+        "No nudity or sexually explicit content.",
+        "No hate speech, bullying, or harassment.",
+        "No spamming or soliciting.",
+        "Be respectful and have fun!"
+    ];
+
 
 
     const toggleTag = (tag) => {
@@ -35,9 +54,19 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-dark flex flex-col items-center justify-center p-4 text-center transition-colors duration-200">
-            <div className="max-w-2xl space-y-8">
-                <div className="space-y-2">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center p-4 text-center transition-colors duration-200 overflow-y-auto">
+
+            {/* Theme Toggle */}
+            <button
+                onClick={toggleTheme}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md hover:scale-110 transition-transform"
+            >
+                {theme === 'dark' ? <Sun className="w-6 h-6 text-yellow-400" /> : <Moon className="w-6 h-6 text-indigo-600" />}
+            </button>
+
+            <div className="max-w-3xl space-y-12 py-12">
+                <div className="space-y-4">
+
                     <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary animate-fade-in-down">
                         LayzeeChat
                     </h1>
@@ -100,31 +129,80 @@ const LandingPage = () => {
                     </span>
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 text-gray-500 dark:text-gray-400">
-                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors">
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-sm">
-                            <Video className="w-6 h-6 text-primary" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-500 dark:text-gray-400">
+                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all">
+                        <div className="p-3 bg-indigo-50 dark:bg-gray-700 rounded-full">
+                            <Video className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <span className="text-sm font-medium">Video Chat</span>
                     </div>
-                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors">
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-sm">
-                            <MessageSquare className="w-6 h-6 text-secondary" />
+                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all">
+                        <div className="p-3 bg-purple-50 dark:bg-gray-700 rounded-full">
+                            <MessageSquare className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                         </div>
                         <span className="text-sm font-medium">Text Chat</span>
                     </div>
-                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors">
-                        <div className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-sm">
+                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all">
+                        <div className="p-3 bg-pink-50 dark:bg-gray-700 rounded-full">
                             <span className="text-xl">👻</span>
                         </div>
                         <span className="text-sm font-medium">Anonymous</span>
                     </div>
                 </div>
+
+                {/* Rules Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm text-left border-l-4 border-red-500">
+                    <div className="flex items-center gap-2 mb-4">
+                        <ShieldAlert className="w-6 h-6 text-red-500" />
+                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Community Rules</h2>
+                    </div>
+                    <ul className="space-y-2">
+                        {rules.map((rule, idx) => (
+                            <li key={idx} className="flex items-start gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                <span className="mt-1.5 w-1.5 h-1.5 bg-red-400 rounded-full flex-shrink-0"></span>
+                                {rule}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                {/* FAQ Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm text-left">
+                    <div className="flex items-center gap-2 mb-6">
+                        <HelpCircle className="w-6 h-6 text-indigo-500" />
+                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">Frequently Asked Questions</h2>
+                    </div>
+                    <div className="space-y-4">
+                        {faqs.map((faq, index) => (
+                            <div key={index} className="border-b border-gray-100 dark:border-gray-700 last:border-0 pb-4 last:pb-0">
+                                <button
+                                    onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                                    className="flex justify-between items-center w-full text-left focus:outline-none group"
+                                >
+                                    <span className="font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                        {faq.question}
+                                    </span>
+                                    {openFaqIndex === index ?
+                                        <ChevronUp className="w-4 h-4 text-indigo-500" /> :
+                                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                                    }
+                                </button>
+                                {openFaqIndex === index && (
+                                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed animate-fade-in">
+                                        {faq.answer}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
             </div>
 
-            <footer className="absolute bottom-4 text-sm text-gray-400">
+            <footer className="py-8 text-sm text-gray-400">
                 &copy; {new Date().getFullYear()} LayzeeChat. Safe & Secure.
             </footer>
+
         </div>
     );
 };
