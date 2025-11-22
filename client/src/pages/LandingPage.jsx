@@ -5,18 +5,30 @@ import { Video, MessageSquare, Hash } from 'lucide-react';
 const LandingPage = () => {
     const navigate = useNavigate();
     const [selectedTags, setSelectedTags] = useState([]);
+    const [customTagInput, setCustomTagInput] = useState('');
 
     const availableTags = ["Gaming", "Coding", "Music", "Movies", "Travel", "Fitness", "Tech", "Art"];
+
 
     const toggleTag = (tag) => {
         if (selectedTags.includes(tag)) {
             setSelectedTags(selectedTags.filter(t => t !== tag));
         } else {
-            if (selectedTags.length < 3) {
+            if (selectedTags.length < 10) {
                 setSelectedTags([...selectedTags, tag]);
             }
         }
     };
+
+    const handleAddCustomTag = (e) => {
+        e.preventDefault();
+        const tag = customTagInput.trim();
+        if (tag && !selectedTags.includes(tag) && selectedTags.length < 10) {
+            setSelectedTags([...selectedTags, tag]);
+            setCustomTagInput('');
+        }
+    };
+
 
     const handleStartChat = () => {
         navigate('/chat', { state: { tags: selectedTags } });
@@ -45,8 +57,8 @@ const LandingPage = () => {
                                 key={tag}
                                 onClick={() => toggleTag(tag)}
                                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${selectedTags.includes(tag)
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md transform scale-105'
+                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-indigo-400'
                                     }`}
                             >
                                 <div className="flex items-center gap-1">
@@ -56,8 +68,27 @@ const LandingPage = () => {
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">Select up to 3 tags to find people with similar interests.</p>
+                    <p className="text-xs text-gray-400 mt-2">Select up to 10 tags to find people with similar interests.</p>
+
+                    {/* Manual Tag Input */}
+                    <form onSubmit={handleAddCustomTag} className="mt-4 flex gap-2 justify-center">
+                        <input
+                            type="text"
+                            value={customTagInput}
+                            onChange={(e) => setCustomTagInput(e.target.value)}
+                            placeholder="Add custom tag..."
+                            className="px-4 py-2 rounded-full text-sm border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!customTagInput.trim() || selectedTags.length >= 10}
+                            className="px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Add
+                        </button>
+                    </form>
                 </div>
+
 
                 <button
                     onClick={handleStartChat}
