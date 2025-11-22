@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { User } from 'lucide-react';
 
 const VideoContainer = ({ localStream, isVideoEnabled, myVideoRef, userVideoRef, callAccepted }) => {
+
+    // Effect to attach local stream to video element
+    useEffect(() => {
+        if (myVideoRef.current && localStream) {
+            myVideoRef.current.srcObject = localStream;
+        }
+    }, [localStream, myVideoRef]);
+
     return (
         <div className="relative flex-1 w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
             {/* Remote Video (Main) */}
