@@ -41,6 +41,9 @@ module.exports = (io) => {
                 matchedTag = null; // No common tag
             }
 
+            console.log(`📋 Current queue size: ${queue.length}, Looking for match...`);
+            console.log(`👤 User ${socket.id} searching with tags:`, tags);
+
             if (partnerIndex !== -1) {
                 const partner = queue.splice(partnerIndex, 1)[0];
                 const partnerId = partner.id;
@@ -48,14 +51,16 @@ module.exports = (io) => {
                 pairings.set(socket.id, partnerId);
                 pairings.set(partnerId, socket.id);
 
+                console.log(`✅ PAIRING SUCCESS: ${socket.id} <-> ${partnerId} (Tag: ${matchedTag || 'Random'})`);
+
                 io.to(socket.id).emit('partnerFound', { partnerId, initiator: true, matchedTag });
                 io.to(partnerId).emit('partnerFound', { partnerId: socket.id, initiator: false, matchedTag });
-
-                console.log(`Paired ${socket.id} with ${partnerId} (Tag: ${matchedTag || 'None'})`);
             } else {
                 queue.push({ id: socket.id, tags });
-                console.log(`User ${socket.id} added to queue with tags: ${tags}`);
+                console.log(`⏳ User ${socket.id} added to queue. Queue size: ${queue.length}`);
+                console.log(`📋 Current queue:`, queue.map(u => ({ id: u.id, tags: u.tags })));
             }
+
         });
 
 
