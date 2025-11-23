@@ -20,14 +20,16 @@ const Controls = ({
     };
 
     return (
-        <div className="flex items-center gap-2 p-2 bg-gray-50 border-t border-gray-200">
+        <div className="flex items-center gap-1 sm:gap-2 p-2 bg-gray-50 border-t border-gray-200">
+
 
 
             {/* Start/Next Button */}
             <button
                 onClick={onNext}
                 disabled={isSearching}
-                className={`px-6 py-3 font-bold text-white rounded-lg shadow-sm transition-all uppercase tracking-wide ${isSearching
+                className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-bold text-white rounded-lg shadow-sm transition-all uppercase tracking-wide ${isSearching
+
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-indigo-600 hover:bg-indigo-700 active:scale-95'
                     }`}
@@ -44,7 +46,8 @@ const Controls = ({
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message..."
-                    className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base bg-gray-100 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+
                 />
             </div>
 

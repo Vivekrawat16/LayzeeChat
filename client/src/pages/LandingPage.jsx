@@ -48,7 +48,8 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden flex flex-col items-center p-4 text-center">
+        <div className="min-h-screen relative overflow-hidden flex flex-col items-center px-2 sm:px-4 py-4 sm:py-8 text-center">
+
             {/* Animated Gradient Background */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 -z-10"></div>
 
@@ -78,14 +79,16 @@ const LandingPage = () => {
                     <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
                         LayzeeChat
                     </h1>
-                    <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+                    <p className="text-base sm:text-lg md:text-xl text-gray-700 mb-4 sm:mb-8 max-w-2xl mx-auto px-4">
+
                         Connect with strangers instantly. No login required. Just pure, random conversations.
                     </p>
                 </div>
 
                 {/* Tag Selection */}
-                <div className="mb-8 max-w-xl mx-auto backdrop-blur-sm bg-white/50 rounded-2xl p-6 shadow-lg">
-                    <p className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">
+                <div className="mb-6 sm:mb-8 max-w-xl mx-auto">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">
+
                         Select Interests (Optional)
                     </p>
                     <div className="flex flex-wrap justify-center gap-3">
@@ -158,7 +161,7 @@ const LandingPage = () => {
 
                 <button
                     onClick={handleStartChat}
-                    className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 hover:shadow-2xl hover:scale-105 active:scale-95 overflow-hidden cursor-pointer"
+                    className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 hover:shadow-2xl hover:scale-105 active:scale-95 overflow-hidden cursor-pointer"
 
                 >
                     <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out bg-white opacity-0 group-hover:opacity-10"></span>
