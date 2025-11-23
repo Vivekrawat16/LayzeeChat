@@ -10,7 +10,8 @@ const VideoContainer = ({ localStream, myVideoRef, userVideoRef, callAccepted })
     }, [localStream, myVideoRef]);
 
     return (
-        <div className="flex flex-col h-full gap-4">
+        <div className="flex flex-col h-full gap-2 sm:gap-4">
+
             {/* Remote Video (Top) */}
             <div className="relative flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-700 shadow-md">
                 <video
