@@ -44,6 +44,7 @@ export const SocketProvider = ({ children }) => {
 
 
         socket.on('partnerFound', ({ partnerId, initiator, matchedTag }) => {
+            console.log('✅ Partner found event received!', { partnerId, initiator, matchedTag });
             setIsSearching(false);
             setPartnerId(partnerId);
             setMatchedTag(matchedTag);
@@ -56,6 +57,7 @@ export const SocketProvider = ({ children }) => {
 
             // initiatePeer is called in the other effect
         });
+
 
 
         socket.on('signal', ({ signal, from }) => {
@@ -85,6 +87,7 @@ export const SocketProvider = ({ children }) => {
         if (!stream) return;
 
         const handlePartnerFound = ({ partnerId, initiator, matchedTag }) => {
+            console.log('🎯 Partner found (with stream)!', { partnerId, initiator, matchedTag, hasStream: !!stream });
             setIsSearching(false);
             setPartnerId(partnerId);
             setMatchedTag(matchedTag);
@@ -97,6 +100,7 @@ export const SocketProvider = ({ children }) => {
 
             initiatePeer(partnerId, initiator, stream);
         };
+
 
 
         socket.on('partnerFound', handlePartnerFound);
@@ -140,12 +144,15 @@ export const SocketProvider = ({ children }) => {
     };
 
     const findPartner = (tags = []) => {
+        console.log('🔍 Finding partner with tags:', tags);
         if (stream) {
             setIsSearching(true);
             setMatchedTag(null);
             resetCall();
 
+            console.log('📡 Emitting findPartner event to server');
             socket.emit('findPartner', { tags });
+
 
             // If searching with tags, set a fallback timeout
             if (tags.length > 0) {
