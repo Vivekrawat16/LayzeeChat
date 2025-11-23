@@ -17,8 +17,13 @@ const io = new Server(server, {
   cors: {
     origin: "*", // Allow all for dev, restrict in prod
     methods: ["GET", "POST"]
-  }
+  },
+  transports: ['websocket', 'polling'], // Support both transports
+  allowEIO3: true, // Support older clients
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
+
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/layzeechat')

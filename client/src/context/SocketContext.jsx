@@ -14,7 +14,27 @@ const SocketContext = createContext();
 // Initialize socket
 // If in production (served from same origin), use relative path. 
 // If dev, use localhost:5000.
-const socket = io(import.meta.env.PROD ? '/' : 'http://localhost:5000');
+const socket = io(import.meta.env.PROD ? '/' : 'http://localhost:5000', {
+    transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    timeout: 20000
+});
+
+// Debug connection
+socket.on('connect', () => {
+    console.log('✅ Socket connected:', socket.id);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('❌ Socket connection error:', error);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('🔌 Socket disconnected:', reason);
+});
+
 
 
 export const useSocket = () => useContext(SocketContext);
