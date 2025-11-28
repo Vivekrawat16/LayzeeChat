@@ -229,13 +229,25 @@ export const SocketProvider = ({ children }) => {
     };
 
 
-    const startChat = async (tags = []) => {
+    const enableMedia = async () => {
         try {
             const currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             setStream(currentStream);
             if (myVideo.current) {
                 myVideo.current.srcObject = currentStream;
             }
+            return currentStream;
+        } catch (err) {
+            console.error('Failed to get stream', err);
+            return null;
+        }
+    };
+
+    const startChat = async (tags = []) => {
+        try {
+            const currentStream = await enableMedia();
+            if (!currentStream) return;
+
             // We can't rely on 'stream' state being updated immediately for findPartner check
             // So we bypass the check or pass true
             setIsSearching(true);
@@ -245,7 +257,7 @@ export const SocketProvider = ({ children }) => {
             findPartner(tags);
 
         } catch (err) {
-            console.error('Failed to get stream', err);
+            console.error('Failed to start chat', err);
         }
     };
 
@@ -266,6 +278,7 @@ export const SocketProvider = ({ children }) => {
             nextPartner,
             reportUser,
             startChat,
+            enableMedia,
             onlineUsers,
             matchedTag
         }}>
