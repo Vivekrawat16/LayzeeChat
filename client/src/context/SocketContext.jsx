@@ -3,11 +3,8 @@ import { io } from 'socket.io-client';
 import Peer from 'simple-peer';
 import { filterMessage } from '../utils/filter';
 
-// Polyfill for global (required by simple-peer in Vite)
-import * as process from "process";
-window.global = window;
-window.process = process;
-window.Buffer = [];
+// Polyfills are handled by vite-plugin-node-polyfills in vite.config.js
+// Do not manually overwrite window.Buffer or window.process here as it breaks the polyfill
 
 const SocketContext = createContext();
 
@@ -81,8 +78,11 @@ export const SocketProvider = ({ children }) => {
 
 
         socket.on('signal', ({ signal, from }) => {
+            console.log('📶 Signal received from:', from);
             if (connectionRef.current) {
                 connectionRef.current.signal(signal);
+            } else {
+                console.warn('⚠️ Signal received but no peer connection exists!');
             }
         });
 
@@ -132,6 +132,7 @@ export const SocketProvider = ({ children }) => {
 
 
     const initiatePeer = (partnerId, initiator, currentStream) => {
+        console.log(`🚀 Initiating peer connection. Initiator: ${initiator}, Partner: ${partnerId}`);
         const peer = new Peer({
             initiator,
             trickle: false,
