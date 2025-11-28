@@ -84,51 +84,6 @@ module.exports = (io) => {
                     },
                     { upsert: true, new: true }
                 );
-                console.log(`📍 User ${socket.id} joined nearby pool at [${location.lat}, ${location.lng}]`);
-            } catch (err) {
-                console.error('Error joining nearby:', err);
-            }
-        });
-
-        socket.on('find-nearby', async ({ radius = 5000 }) => { // radius in meters
-            try {
-                const currentUser = await NearbyUser.findOne({ socketId: socket.id });
-                if (!currentUser) return;
-
-                // Find users within radius, excluding self and busy users
-                const nearbyUsers = await NearbyUser.find({
-                    location: {
-                        $near: {
-                            $geometry: currentUser.location,
-                            $maxDistance: radius
-                        }
-                    },
-                    socketId: { $ne: socket.id },
-                    isBusy: false
-                }).limit(1); // Just get one match for now
-
-                if (nearbyUsers.length > 0) {
-                    const partner = nearbyUsers[0];
-                    const partnerId = partner.socketId;
-
-                    // Mark both as busy
-                    await NearbyUser.updateMany(
-                        { socketId: { $in: [socket.id, partnerId] } },
-                        { isBusy: true }
-                    );
-
-                    pairings.set(socket.id, partnerId);
-                    pairings.set(partnerId, socket.id);
-
-                    console.log(`✅ NEARBY PAIRING: ${socket.id} <-> ${partnerId} (Dist: <${radius}m)`);
-
-                    io.to(socket.id).emit('partnerFound', { partnerId, initiator: true, matchedTag: 'Nearby' });
-                    io.to(partnerId).emit('partnerFound', { partnerId: socket.id, initiator: false, matchedTag: 'Nearby' });
-                } else {
-                    // No match found yet
-                    // socket.emit('no-nearby-found'); // Optional: let client know to keep waiting or retry
-                }
-
             } catch (err) {
                 console.error('Error finding nearby:', err);
             }
