@@ -67,67 +67,52 @@ module.exports = (io) => {
         });
 
         // --- Location-Based Matchmaking ---
-        socket.on('join-nearby', async ({ location }) => {
-            try {
-                if (!location || !location.lat || !location.lng) return;
-
-                await NearbyUser.findOneAndUpdate(
-                    { socketId: socket.id },
-                    {
-                        socketId: socket.id,
-                        location: {
-                            type: 'Point',
-                            coordinates: [location.lng, location.lat] // GeoJSON is [lng, lat]
-                        },
-                        lastActive: new Date(),
-                        isBusy: false
-                    },
-                    { upsert: true, new: true }
+        { upsert: true, new: true }
                 );
-            } catch (err) {
-                console.error('Error finding nearby:', err);
-            }
+} catch (err) {
+    console.error('Error finding nearby:', err);
+}
         });
 
 
-        socket.on('signal', ({ signal, to }) => {
-            io.to(to).emit('signal', { signal, from: socket.id });
-        });
+socket.on('signal', ({ signal, to }) => {
+    io.to(to).emit('signal', { signal, from: socket.id });
+});
 
-        socket.on('message', ({ text, to }) => {
-            io.to(to).emit('message', { text, from: socket.id });
-        });
+socket.on('message', ({ text, to }) => {
+    io.to(to).emit('message', { text, from: socket.id });
+});
 
-        socket.on('report', ({ partnerId }) => {
-            console.log(`User ${socket.id} reported ${partnerId}`);
-            // Here we could log to DB, ban user, etc.
-        });
+socket.on('report', ({ partnerId }) => {
+    console.log(`User ${socket.id} reported ${partnerId}`);
+    // Here we could log to DB, ban user, etc.
+});
 
-        socket.on('disconnect', async () => {
-            console.log('User Disconnected:', socket.id);
-            io.emit('userCount', io.engine.clientsCount); // Update count on disconnect
+socket.on('disconnect', async () => {
+    console.log('User Disconnected:', socket.id);
+    io.emit('userCount', io.engine.clientsCount); // Update count on disconnect
 
-            // Cleanup Standard Queue
-            queue = queue.filter(u => u.id !== socket.id);
+    // Cleanup Standard Queue
+    queue = queue.filter(u => u.id !== socket.id);
 
-            // Cleanup Nearby DB
-            try {
-                await NearbyUser.deleteOne({ socketId: socket.id });
-            } catch (err) {
-                console.error('Error removing nearby user:', err);
-            }
+    // Cleanup Nearby DB
+    try {
+        await NearbyUser.deleteOne({ socketId: socket.id });
+    } catch (err) {
+        console.error('Error removing nearby user:', err);
+    }
 
-            const partnerId = pairings.get(socket.id);
-            if (partnerId) {
-                io.to(partnerId).emit('partnerDisconnected');
-                pairings.delete(partnerId);
-                pairings.delete(socket.id);
+    const partnerId = pairings.get(socket.id);
+    if (partnerId) {
+        io.to(partnerId).emit('partnerDisconnected');
+        pairings.delete(partnerId);
+        pairings.delete(socket.id);
 
-                // If they were in nearby mode, free the partner
-                try {
-                    await NearbyUser.updateOne({ socketId: partnerId }, { isBusy: false });
-                } catch (e) { }
-            }
-        });
+        // If they were in nearby mode, free the partner
+        try {
+            await NearbyUser.updateOne({ socketId: partnerId }, { isBusy: false });
+        } catch (e) { }
+    }
+});
     });
 };

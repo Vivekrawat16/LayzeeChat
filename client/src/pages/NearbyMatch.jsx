@@ -29,7 +29,17 @@ const NearbyMatch = () => {
         if (partnerId) {
             setStatus('found');
         }
-    }, [partnerId]);
+
+        const handleNoMatch = () => {
+            setStatus('no-match');
+        };
+
+        socket.on('no-nearby-found', handleNoMatch);
+
+        return () => {
+            socket.off('no-nearby-found', handleNoMatch);
+        };
+    }, [partnerId, socket]);
 
     const getLocation = () => {
         setStatus('locating');
@@ -226,6 +236,11 @@ const NearbyMatch = () => {
                                     <>
                                         <Loader2 className="w-6 h-6 animate-spin" />
                                         Scanning Area...
+                                    </>
+                                ) : status === 'no-match' ? (
+                                    <>
+                                        <Users className="w-6 h-6" />
+                                        No one found. Try again?
                                     </>
                                 ) : (
                                     <>
