@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, MessageSquare, Hash, ChevronDown, ChevronUp, ShieldAlert, HelpCircle } from 'lucide-react';
+import { Video, MessageSquare, Hash, ChevronDown, ChevronUp, ShieldAlert, HelpCircle, Sparkles } from 'lucide-react';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -48,87 +48,96 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden flex flex-col items-center px-2 sm:px-4 py-4 sm:py-8 text-center">
+        <div className="min-h-screen bg-md-background flex flex-col items-center px-4 sm:px-6 py-8 sm:py-12 text-center overflow-x-hidden">
 
-            {/* Animated Gradient Background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 -z-10"></div>
-
-            {/* Geometric Texture Overlay */}
-            <div className="absolute inset-0 -z-10 opacity-30">
+            {/* Subtle Grid Background */}
+            <div className="fixed inset-0 -z-10 opacity-20">
                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-                            <circle cx="2" cy="2" r="1.5" fill="#6366f1" opacity="0.3" />
-                        </pattern>
-                        <pattern id="grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-                            <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#a855f7" strokeWidth="0.5" opacity="0.2" />
+                        <pattern id="grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#4285F4" strokeWidth="0.5" opacity="0.4" />
                         </pattern>
                     </defs>
-                    <rect width="100%" height="100%" fill="url(#dots)" />
                     <rect width="100%" height="100%" fill="url(#grid)" />
                 </svg>
             </div>
 
-            {/* Floating Shapes */}
-            <div className="absolute top-20 left-10 w-32 h-32 bg-indigo-400 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob"></div>
-            <div className="absolute top-40 right-10 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-20 left-1/2 w-32 h-32 bg-pink-400 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-4000"></div>
+            <div className="max-w-4xl w-full space-y-16 relative z-10">
 
-            <div className="max-w-3xl space-y-12 py-12 relative z-10">
-                <div className="space-y-4">
-                    <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+                {/* Hero Section */}
+                <div className="space-y-6 pt-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-google-blue/10 rounded-full border border-google-blue/20 mb-4">
+                        <Sparkles className="w-4 h-4 text-google-blue" />
+                        <span className="text-sm font-body font-medium text-google-blue">Physics-Powered Conversations</span>
+                    </div>
+
+                    <h1 className="font-display text-6xl sm:text-7xl md:text-8xl text-transparent bg-clip-text bg-gradient-to-r from-google-blue via-google-green to-google-yellow leading-tight tracking-tight">
                         LayzeeChat
                     </h1>
-                    <p className="text-base sm:text-lg md:text-xl text-gray-700 mb-4 sm:mb-8 max-w-2xl mx-auto px-4">
 
-                        Connect with strangers instantly. No login required. Just pure, random conversations.
+                    <p className="text-lg sm:text-xl md:text-2xl text-md-on-surface max-w-2xl mx-auto font-body leading-relaxed opacity-80">
+                        Connect with strangers instantly. No login required. <br className="hidden sm:block" />
+                        Just pure, random conversations.
                     </p>
                 </div>
 
                 {/* Tag Selection */}
-                <div className="mb-6 sm:mb-8 max-w-xl mx-auto">
-                    <p className="text-xs sm:text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">
+                <div className="max-w-2xl mx-auto space-y-4">
+                    <div className="flex items-center justify-center gap-2">
+                        <Hash className="w-5 h-5 text-google-blue" />
+                        <h2 className="text-sm font-body font-semibold text-gray-600 uppercase tracking-wider">
+                            Select Interests (Optional)
+                        </h2>
+                    </div>
 
-                        Select Interests (Optional)
-                    </p>
                     <div className="flex flex-wrap justify-center gap-3">
                         {availableTags.map(tag => (
                             <button
                                 key={tag}
                                 onClick={() => toggleTag(tag)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 border transform hover:-translate-y-1 cursor-pointer ${selectedTags.includes(tag)
-
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-105 hover:shadow-xl hover:bg-indigo-700'
-                                    : 'bg-white/80 text-gray-700 border-gray-300 hover:border-indigo-400 hover:shadow-lg hover:bg-indigo-50'
-                                    }`}
-
+                                className={`
+                                    px-5 py-2.5 
+                                    rounded-full 
+                                    text-sm 
+                                    font-body 
+                                    font-medium 
+                                    transition-all 
+                                    duration-300 
+                                    border-2
+                                    transform 
+                                    hover:-translate-y-1 
+                                    hover:shadow-md-3
+                                    active:scale-95
+                                    ${selectedTags.includes(tag)
+                                        ? 'bg-google-blue text-white border-google-blue shadow-md-2 scale-105'
+                                        : 'bg-white text-gray-700 border-gray-200 hover:border-google-blue hover:text-google-blue'
+                                    }
+                                `}
                             >
-                                <div className="flex items-center gap-1">
-                                    <Hash className="w-3 h-3" />
-                                    {tag}
-                                </div>
+                                #{tag}
                             </button>
                         ))}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">Select up to 10 tags to find people with similar interests.</p>
 
                     {/* Selected Tags Display */}
                     {selectedTags.length > 0 && (
-                        <div className="mt-4 p-4 bg-indigo-50/50 rounded-xl border border-indigo-200">
-                            <p className="text-xs font-semibold text-indigo-700 mb-2">Selected Tags ({selectedTags.length}/10):</p>
+                        <div className="p-5 bg-white rounded-2xl shadow-md-2 border-2 border-google-blue/20">
+                            <p className="text-xs font-body font-semibold text-google-blue mb-3 uppercase tracking-wide">
+                                Selected Tags ({selectedTags.length}/10)
+                            </p>
                             <div className="flex flex-wrap gap-2">
                                 {selectedTags.map(tag => (
                                     <span
                                         key={tag}
-                                        className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded-full"
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-google-blue text-white text-sm font-body font-medium rounded-full shadow-md-1"
                                     >
                                         #{tag}
                                         <button
                                             onClick={() => toggleTag(tag)}
-                                            className="ml-1 hover:bg-indigo-700 rounded-full p-0.5 transition-colors"
+                                            className="hover:bg-white/20 rounded-full p-1 transition-colors"
                                             title="Remove tag"
                                         >
-                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                         </button>
@@ -139,72 +148,75 @@ const LandingPage = () => {
                     )}
 
                     {/* Manual Tag Input */}
-                    <form onSubmit={handleAddCustomTag} className="mt-4 flex gap-2 justify-center">
+                    <form onSubmit={handleAddCustomTag} className="flex gap-3 justify-center">
                         <input
                             type="text"
                             value={customTagInput}
                             onChange={(e) => setCustomTagInput(e.target.value)}
                             placeholder="Add custom tag..."
-                            className="px-4 py-2 rounded-full text-sm border border-gray-300 bg-white/80 backdrop-blur-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="px-5 py-2.5 rounded-full text-sm font-body border-2 border-gray-200 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-google-blue focus:border-transparent transition-all"
                         />
                         <button
                             type="submit"
                             disabled={!customTagInput.trim() || selectedTags.length >= 10}
-                            className="px-4 py-2 rounded-full text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-
-
+                            className="px-5 py-2.5 rounded-full text-sm font-body font-bold text-white bg-google-blue hover:bg-[#5a95f5] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 shadow-md-2 hover:shadow-md-3 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                         >
                             Add
                         </button>
                     </form>
                 </div>
 
-                <button
-                    onClick={handleStartChat}
-                    className="group relative inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold text-white transition-all duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 hover:shadow-2xl hover:scale-105 active:scale-95 overflow-hidden cursor-pointer"
+                {/* Start Button */}
+                <div className="flex justify-center">
+                    <button
+                        onClick={handleStartChat}
+                        className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 text-lg font-display font-bold text-white bg-gradient-to-r from-google-blue to-google-green rounded-full shadow-md-4 hover:shadow-md-4 hover:scale-105 active:scale-100 transition-all duration-300 overflow-hidden"
+                    >
+                        <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out bg-white opacity-0 group-hover:opacity-10"></span>
+                        <span className="relative flex items-center gap-3">
+                            Start Lazy Chatting
+                            <Video className="w-6 h-6" />
+                        </span>
+                    </button>
+                </div>
 
-                >
-                    <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out bg-white opacity-0 group-hover:opacity-10"></span>
-
-                    <span className="relative flex items-center gap-2">
-                        Start Lazy Chatting <Video className="w-5 h-5" />
-                    </span>
-                </button>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-600">
-                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/90 cursor-pointer group">
-                        <div className="p-3 bg-indigo-100 rounded-full group-hover:bg-indigo-200 transition-colors duration-300">
-
-                            <Video className="w-6 h-6 text-indigo-600" />
+                {/* Feature Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="group flex flex-col items-center gap-3 p-6 rounded-2xl bg-white shadow-md-2 hover:shadow-md-3 transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-google-blue/20">
+                        <div className="p-4 bg-google-blue/10 rounded-full group-hover:bg-google-blue/20 transition-colors duration-300">
+                            <Video className="w-8 h-8 text-google-blue" />
                         </div>
-                        <span className="text-sm font-medium">Video Chat</span>
+                        <span className="text-base font-body font-semibold text-gray-800">Video Chat</span>
+                        <p className="text-sm text-gray-600 font-body">Face-to-face conversations</p>
                     </div>
-                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/90 cursor-pointer group">
-                        <div className="p-3 bg-purple-100 rounded-full group-hover:bg-purple-200 transition-colors duration-300">
 
-                            <MessageSquare className="w-6 h-6 text-purple-600" />
+                    <div className="group flex flex-col items-center gap-3 p-6 rounded-2xl bg-white shadow-md-2 hover:shadow-md-3 transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-google-green/20">
+                        <div className="p-4 bg-google-green/10 rounded-full group-hover:bg-google-green/20 transition-colors duration-300">
+                            <MessageSquare className="w-8 h-8 text-google-green" />
                         </div>
-                        <span className="text-sm font-medium">Text Chat</span>
+                        <span className="text-base font-body font-semibold text-gray-800">Text Chat</span>
+                        <p className="text-sm text-gray-600 font-body">Type away comfortably</p>
                     </div>
-                    <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/70 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/90 cursor-pointer group">
-                        <div className="p-3 bg-pink-100 rounded-full group-hover:bg-pink-200 transition-colors duration-300">
 
-                            <span className="text-xl">👻</span>
+                    <div className="group flex flex-col items-center gap-3 p-6 rounded-2xl bg-white shadow-md-2 hover:shadow-md-3 transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-google-yellow/20">
+                        <div className="p-4 bg-google-yellow/10 rounded-full group-hover:bg-google-yellow/20 transition-colors duration-300">
+                            <span className="text-3xl">👻</span>
                         </div>
-                        <span className="text-sm font-medium">Anonymous</span>
+                        <span className="text-base font-body font-semibold text-gray-800">Anonymous</span>
+                        <p className="text-sm text-gray-600 font-body">100% privacy guaranteed</p>
                     </div>
                 </div>
 
                 {/* Rules Section */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg text-left border-l-4 border-red-500">
-                    <div className="flex items-center gap-2 mb-4">
-                        <ShieldAlert className="w-6 h-6 text-red-500" />
-                        <h2 className="text-xl font-bold text-gray-800">Community Rules</h2>
+                <div className="bg-white rounded-2xl p-8 shadow-md-2 text-left border-l-4 border-google-red">
+                    <div className="flex items-center gap-3 mb-6">
+                        <ShieldAlert className="w-7 h-7 text-google-red" />
+                        <h2 className="text-2xl font-display font-bold text-gray-800">Community Rules</h2>
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                         {rules.map((rule, idx) => (
-                            <li key={idx} className="flex items-start gap-2 text-gray-700 text-sm">
-                                <span className="mt-1.5 w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></span>
+                            <li key={idx} className="flex items-start gap-3 text-gray-700 text-base font-body">
+                                <span className="mt-2 w-2 h-2 bg-google-red rounded-full flex-shrink-0"></span>
                                 {rule}
                             </li>
                         ))}
@@ -212,10 +224,10 @@ const LandingPage = () => {
                 </div>
 
                 {/* FAQ Section */}
-                <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg text-left">
-                    <div className="flex items-center gap-2 mb-6">
-                        <HelpCircle className="w-6 h-6 text-indigo-600" />
-                        <h2 className="text-xl font-bold text-gray-800">Frequently Asked Questions</h2>
+                <div className="bg-white rounded-2xl p-8 shadow-md-2 text-left">
+                    <div className="flex items-center gap-3 mb-6">
+                        <HelpCircle className="w-7 h-7 text-google-blue" />
+                        <h2 className="text-2xl font-display font-bold text-gray-800">Frequently Asked Questions</h2>
                     </div>
                     <div className="space-y-4">
                         {faqs.map((faq, index) => (
@@ -224,16 +236,16 @@ const LandingPage = () => {
                                     onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                                     className="flex justify-between items-center w-full text-left focus:outline-none group"
                                 >
-                                    <span className="font-medium text-gray-800 group-hover:text-indigo-600 transition-colors">
+                                    <span className="font-body font-semibold text-gray-800 group-hover:text-google-blue transition-colors">
                                         {faq.question}
                                     </span>
                                     {openFaqIndex === index ?
-                                        <ChevronUp className="w-4 h-4 text-indigo-600" /> :
-                                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                                        <ChevronUp className="w-5 h-5 text-google-blue" /> :
+                                        <ChevronDown className="w-5 h-5 text-gray-500" />
                                     }
                                 </button>
                                 {openFaqIndex === index && (
-                                    <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                                    <p className="mt-3 text-sm text-gray-600 font-body leading-relaxed">
                                         {faq.answer}
                                     </p>
                                 )}
@@ -244,8 +256,9 @@ const LandingPage = () => {
 
             </div>
 
-            <footer className="py-8 text-sm text-gray-500">
-                &copy; {new Date().getFullYear()} LayzeeChat. Safe & Secure.
+            {/* Footer */}
+            <footer className="py-10 text-sm text-gray-500 font-body">
+                &copy; {new Date().getFullYear()} LayzeeChat. Safe &amp; Secure.
             </footer>
 
         </div>
@@ -253,3 +266,4 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+

@@ -13,11 +13,13 @@
     "@tailwindcss/postcss": "^4.1.17",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.554.0",
+    "matter-js": "^0.19.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6",
     "simple-peer": "^9.11.1",
     "socket.io-client": "^4.8.1",
+    "use-sound": "^4.0.3",
     "vite-plugin-node-polyfills": "^0.24.0"
   },
   "devDependencies": {
