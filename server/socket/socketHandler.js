@@ -67,52 +67,118 @@ module.exports = (io) => {
         });
 
         // --- Location-Based Matchmaking ---
-        { upsert: true, new: true }
+        socket.on('join-nearby', async ({ location }) => {
+            try {
+                if (!location || !location.lat || !location.lng) return;
+
+                await NearbyUser.findOneAndUpdate(
+                    { socketId: socket.id },
+                    {
+                        socketId: socket.id,
+                        location: {
+                            type: 'Point',
+                            coordinates: [location.lng, location.lat] // GeoJSON is [lng, lat]
+                        },
+                        lastActive: new Date(),
+                        isBusy: false
+                    },
+                    { upsert: true, new: true }
                 );
-} catch (err) {
-    console.error('Error finding nearby:', err);
-}
+                console.log(`📍 User ${socket.id} joined nearby pool at [${location.lat}, ${location.lng}]`);
+            } catch (err) {
+                console.error('Error joining nearby:', err);
+            }
+        });
+
+        socket.on('find-nearby', async ({ radius = 5000 }) => { // radius in meters
+            console.log(`📍 User ${socket.id} looking for nearby match within ${radius}m`);
+            try {
+                const currentUser = await NearbyUser.findOne({ socketId: socket.id });
+                if (!currentUser) {
+                    console.log(`❌ User ${socket.id} not found in NearbyUsers collection`);
+                    return;
+                }
+
+                // Find users within radius, excluding self and busy users
+                const nearbyUsers = await NearbyUser.find({
+                    location: {
+                        $near: {
+                            $geometry: currentUser.location,
+                            $maxDistance: radius
+                        }
+                    },
+                    socketId: { $ne: socket.id },
+                    isBusy: false
+                });
+
+                console.log(`🔎 Found ${nearbyUsers.length} nearby users for ${socket.id}`);
+
+                if (nearbyUsers.length > 0) {
+                    const partner = nearbyUsers[0];
+                    const partnerId = partner.socketId;
+
+                    // Mark both as busy
+                    await NearbyUser.updateMany(
+                        { socketId: { $in: [socket.id, partnerId] } },
+                        { $set: { isBusy: true } }
+                    );
+
+                    pairings.set(socket.id, partnerId);
+                    pairings.set(partnerId, socket.id);
+
+                    console.log(`✅ NEARBY PAIRING: ${socket.id} <-> ${partnerId} (Dist: <${radius}m)`);
+
+                    io.to(socket.id).emit('partnerFound', { partnerId, initiator: true, matchedTag: 'Nearby' });
+                    io.to(partnerId).emit('partnerFound', { partnerId: socket.id, initiator: false, matchedTag: 'Nearby' });
+                } else {
+                    console.log(`⏳ No nearby users found for ${socket.id}`);
+                    socket.emit('no-nearby-found');
+                }
+
+            } catch (err) {
+                console.error('Error finding nearby:', err);
+            }
         });
 
 
-socket.on('signal', ({ signal, to }) => {
-    io.to(to).emit('signal', { signal, from: socket.id });
-});
+        socket.on('signal', ({ signal, to }) => {
+            io.to(to).emit('signal', { signal, from: socket.id });
+        });
 
-socket.on('message', ({ text, to }) => {
-    io.to(to).emit('message', { text, from: socket.id });
-});
+        socket.on('message', ({ text, to }) => {
+            io.to(to).emit('message', { text, from: socket.id });
+        });
 
-socket.on('report', ({ partnerId }) => {
-    console.log(`User ${socket.id} reported ${partnerId}`);
-    // Here we could log to DB, ban user, etc.
-});
+        socket.on('report', ({ partnerId }) => {
+            console.log(`User ${socket.id} reported ${partnerId}`);
+            // Here we could log to DB, ban user, etc.
+        });
 
-socket.on('disconnect', async () => {
-    console.log('User Disconnected:', socket.id);
-    io.emit('userCount', io.engine.clientsCount); // Update count on disconnect
+        socket.on('disconnect', async () => {
+            console.log('User Disconnected:', socket.id);
+            io.emit('userCount', io.engine.clientsCount); // Update count on disconnect
 
-    // Cleanup Standard Queue
-    queue = queue.filter(u => u.id !== socket.id);
+            // Cleanup Standard Queue
+            queue = queue.filter(u => u.id !== socket.id);
 
-    // Cleanup Nearby DB
-    try {
-        await NearbyUser.deleteOne({ socketId: socket.id });
-    } catch (err) {
-        console.error('Error removing nearby user:', err);
-    }
+            // Cleanup Nearby DB
+            try {
+                await NearbyUser.deleteOne({ socketId: socket.id });
+            } catch (err) {
+                console.error('Error removing nearby user:', err);
+            }
 
-    const partnerId = pairings.get(socket.id);
-    if (partnerId) {
-        io.to(partnerId).emit('partnerDisconnected');
-        pairings.delete(partnerId);
-        pairings.delete(socket.id);
+            const partnerId = pairings.get(socket.id);
+            if (partnerId) {
+                io.to(partnerId).emit('partnerDisconnected');
+                pairings.delete(partnerId);
+                pairings.delete(socket.id);
 
-        // If they were in nearby mode, free the partner
-        try {
-            await NearbyUser.updateOne({ socketId: partnerId }, { isBusy: false });
-        } catch (e) { }
-    }
-});
+                // If they were in nearby mode, free the partner
+                try {
+                    await NearbyUser.updateOne({ socketId: partnerId }, { isBusy: false });
+                } catch (e) { }
+            }
+        });
     });
 };
