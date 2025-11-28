@@ -90,12 +90,30 @@ module.exports = (io) => {
             }
         });
 
-        socket.on('find-nearby', async ({ radius = 5000 }) => { // radius in meters
+        socket.on('find-nearby', async ({ radius = 5000, location }) => { // radius in meters
             console.log(`📍 User ${socket.id} looking for nearby match within ${radius}m`);
             try {
+                // Ensure user is in DB with current location (fixes race condition)
+                if (location && location.lat && location.lng) {
+                    await NearbyUser.findOneAndUpdate(
+                        { socketId: socket.id },
+                        {
+                            socketId: socket.id,
+                            location: {
+                                type: 'Point',
+                                coordinates: [location.lng, location.lat]
+                            },
+                            lastActive: new Date(),
+                            isBusy: false
+                        },
+                        { upsert: true, new: true }
+                    );
+                }
+
                 const currentUser = await NearbyUser.findOne({ socketId: socket.id });
                 if (!currentUser) {
-                    console.log(`❌ User ${socket.id} not found in NearbyUsers collection`);
+                    console.log(`❌ User ${socket.id} not found in NearbyUsers collection (and no location provided)`);
+                    socket.emit('no-nearby-found'); // Emit here too so client doesn't hang
                     return;
                 }
 

@@ -79,8 +79,8 @@ const NearbyMatch = () => {
         // Ensure we have media permissions first
         await enableMedia();
 
-        // Emit find event
-        socket.emit('find-nearby', { radius });
+        // Emit find event with location to ensure server has it
+        socket.emit('find-nearby', { radius, location });
     };
 
     const handleBack = () => {
