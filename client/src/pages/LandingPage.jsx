@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, MessageSquare, Hash, ChevronDown, ChevronUp, ShieldAlert, HelpCircle, Sparkles } from 'lucide-react';
+import { Video, MessageSquare, Hash, ChevronDown, ChevronUp, ShieldAlert, HelpCircle, Sparkles, MapPin } from 'lucide-react';
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -68,7 +68,7 @@ const LandingPage = () => {
                 <div className="space-y-6 pt-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-google-blue/10 rounded-full border border-google-blue/20 mb-4">
                         <Sparkles className="w-4 h-4 text-google-blue" />
-                        <span className="text-sm font-body font-medium text-google-blue">Physics-Powered Conversations</span>
+                        <span className="text-sm font-body font-medium text-google-blue">Instant Random Connections</span>
                     </div>
 
                     <h1 className="font-display text-6xl sm:text-7xl md:text-8xl text-transparent bg-clip-text bg-gradient-to-r from-google-blue via-google-green to-google-yellow leading-tight tracking-tight">
@@ -167,7 +167,7 @@ const LandingPage = () => {
                 </div>
 
                 {/* Start Button */}
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-4">
                     <button
                         onClick={handleStartChat}
                         className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 text-lg font-display font-bold text-white bg-gradient-to-r from-google-blue to-google-green rounded-full shadow-md-4 hover:shadow-md-4 hover:scale-105 active:scale-100 transition-all duration-300 overflow-hidden"
@@ -177,6 +177,14 @@ const LandingPage = () => {
                             Start Lazy Chatting
                             <Video className="w-6 h-6" />
                         </span>
+                    </button>
+
+                    <button
+                        onClick={() => navigate('/nearby')}
+                        className="text-sm font-bold text-google-blue hover:text-google-green transition-colors flex items-center gap-2 px-4 py-2 rounded-full hover:bg-google-blue/5"
+                    >
+                        <MapPin className="w-4 h-4" />
+                        Connect With Nearby Users
                     </button>
                 </div>
 
