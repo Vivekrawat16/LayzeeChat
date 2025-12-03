@@ -17,6 +17,7 @@ const ChatRoom = () => {
         sendMessage,
         reportUser,
         startChat,
+        stopMedia,
         onlineUsers,
         matchedTag
     } = useSocket();
@@ -30,6 +31,11 @@ const ChatRoom = () => {
     useEffect(() => {
         // Start media and search when entering chat, passing selected tags
         startChat(tags);
+
+        // Cleanup media on unmount
+        return () => {
+            stopMedia();
+        };
     }, []);
 
     useEffect(() => {
@@ -56,168 +62,196 @@ const ChatRoom = () => {
     };
 
     return (
-        <div className="h-screen bg-gray-50 flex flex-col">
+        <div className="h-screen bg-gray-100 flex flex-col font-sans">
             {/* Header */}
-            <header className="flex items-center justify-between px-3 md:px-6 py-3 md:py-4 bg-white border-b border-gray-200 shadow-sm">
-                <div className="flex items-center gap-2 md:gap-3">
-                    {/* Google-style Multi-color Logo */}
-                    <div className="font-display text-lg md:text-2xl font-bold">
-                        <span className="text-google-blue">L</span>
-                        <span className="text-google-red">a</span>
-                        <span className="text-google-yellow">y</span>
-                        <span className="text-google-blue">z</span>
-                        <span className="text-google-green">e</span>
-                        <span className="text-google-red">e</span>
-                        <span className="text-google-blue">C</span>
-                        <span className="text-google-yellow">h</span>
-                        <span className="text-google-green">a</span>
-                        <span className="text-google-red">t</span>
+            <header className="flex-none flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shadow-sm z-10">
+                <div className="flex items-center gap-2">
+                    <div className="font-display text-xl md:text-2xl font-bold tracking-tight">
+                        <span className="text-[#4285F4]">L</span>
+                        <span className="text-[#EA4335]">a</span>
+                        <span className="text-[#FBBC05]">y</span>
+                        <span className="text-[#4285F4]">z</span>
+                        <span className="text-[#34A853]">e</span>
+                        <span className="text-[#EA4335]">e</span>
+                        <span className="text-[#4285F4]">C</span>
+                        <span className="text-[#FBBC05]">h</span>
+                        <span className="text-[#34A853]">a</span>
+                        <span className="text-[#EA4335]">t</span>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm font-body">
+                <div className="flex items-center gap-3 text-sm">
                     {matchedTag && (
-                        <span className="px-2 md:px-3 py-1 md:py-1.5 bg-google-blue/10 text-google-blue text-[10px] md:text-xs font-bold rounded-full uppercase tracking-wider border border-google-blue/20">
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded border border-blue-100">
                             #{matchedTag}
                         </span>
                     )}
-                    <div className="flex items-center gap-1 md:gap-2">
-                        <span className="inline-block w-2 h-2 md:w-2.5 md:h-2.5 bg-google-green rounded-full animate-pulse"></span>
-                        <span className="text-gray-600 font-medium hidden sm:inline">{onlineUsers} online</span>
-                        <span className="text-gray-600 font-medium sm:hidden">{onlineUsers}</span>
+                    <div className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span className="text-gray-600 font-medium text-xs">{onlineUsers} online</span>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content - Responsive Layout */}
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                {/* Videos Section */}
-                <div className="w-full md:w-1/2 p-2 md:p-4 flex flex-row md:flex-col gap-2 md:gap-4 h-48 md:h-auto">
-                    {/* Partner Video */}
-                    <div className="flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-300 shadow-sm relative">
-                        <video
-                            playsInline
-                            autoPlay
-                            ref={userVideo}
-                            className={`w-full h-full object-cover ${!callAccepted ? 'hidden' : ''}`}
-                        />
-                        {!callAccepted && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-900">
-                                <div className="w-12 h-12 md:w-20 md:h-20 bg-gray-800 rounded-full flex items-center justify-center mb-2 md:mb-3">
-                                    <User className="w-6 h-6 md:w-10 md:h-10" />
-                                </div>
-                                <p className="text-sm md:text-lg font-medium">Stranger</p>
-                                {isSearching && (
-                                    <div className="mt-2 md:mt-4 flex items-center gap-2 text-google-blue">
-                                        <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
-                                        <span className="text-xs md:text-base">Looking...</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden p-2 md:p-4 gap-2 md:gap-4 max-w-[1600px] mx-auto w-full">
 
-                    {/* Your Video */}
-                    <div className="flex-1 bg-gray-900 rounded-lg overflow-hidden border border-gray-300 shadow-sm relative">
-                        <video
-                            playsInline
-                            muted
-                            autoPlay
-                            ref={myVideo}
-                            className={`w-full h-full object-cover transform scale-x-[-1] ${!stream ? 'hidden' : ''}`}
-                        />
-                        {!stream && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 bg-gray-900">
-                                <div className="w-12 h-12 md:w-20 md:h-20 bg-gray-800 rounded-full flex items-center justify-center mb-2 md:mb-3">
-                                    <User className="w-6 h-6 md:w-10 md:h-10" />
+                {/* Left Column: Videos (30% on Desktop, PiP on Mobile) */}
+                <div className="flex-none md:w-[30%] flex flex-col h-[45vh] md:h-auto min-h-0 relative">
+                    {/* Video Wrapper: Relative for Mobile PiP, Flex-Col for Desktop Stack */}
+                    <div className="flex-1 relative md:flex md:flex-col md:gap-4">
+
+                        {/* Partner Video */}
+                        {/* Mobile: Absolute Full (PiP Base) */}
+                        {/* Desktop: Relative Flex-1 (Top Stack) */}
+                        <div className="absolute inset-0 md:relative md:inset-auto md:flex-1 bg-black rounded-xl overflow-hidden shadow-sm border border-gray-300 z-0">
+                            <video
+                                playsInline
+                                autoPlay
+                                ref={userVideo}
+                                className={`w-full h-full object-cover ${!callAccepted ? 'hidden' : ''}`}
+                            />
+                            {!callAccepted && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#404040] text-white p-4 text-center">
+                                    {isSearching ? (
+                                        <div className="flex flex-col items-center gap-3">
+                                            <Loader2 className="w-10 h-10 animate-spin text-white/50" />
+                                            <p className="font-medium text-lg text-white/80">Searching for partner...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <div className="text-2xl font-bold text-white/20">layzeechat.com</div>
+                                            <Flag className="w-6 h-6 text-red-500 absolute bottom-4 right-4" />
+                                        </div>
+                                    )}
                                 </div>
-                                <p className="text-sm md:text-lg font-medium">You</p>
+                            )}
+                        </div>
+
+                        {/* My Video */}
+                        {/* Mobile: Absolute Top-Right (PiP Overlay) */}
+                        {/* Desktop: Relative Flex-1 (Bottom Stack) */}
+                        <div className="absolute top-3 right-3 w-24 h-32 md:static md:w-auto md:h-auto md:flex-1 bg-black rounded-lg md:rounded-xl overflow-hidden border-2 border-white/20 md:border md:border-gray-300 shadow-lg md:shadow-sm z-10">
+                            <video
+                                playsInline
+                                muted
+                                autoPlay
+                                ref={myVideo}
+                                className={`w-full h-full object-cover transform scale-x-[-1] ${!stream ? 'hidden' : ''}`}
+                            />
+                            {!stream && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-xs text-gray-500">
+                                    No Cam
+                                </div>
+                            )}
+                            <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/50 rounded text-[10px] md:text-xs text-white font-medium backdrop-blur-sm">
+                                You
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
 
-                {/* Chat Section */}
-                <div className="flex-1 w-full md:w-1/2 p-2 md:p-4 flex flex-col min-h-0">
-                    <div className="flex-1 bg-white rounded-lg border border-gray-300 shadow-sm flex flex-col overflow-hidden">
-                        {/* Chat Messages */}
-                        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3">
-                            {/* Welcome Message */}
-                            <div className="text-center text-gray-500 text-xs md:text-sm py-2 md:py-4">
-                                <p className="font-semibold text-gray-700 mb-1">Welcome to LayzeeChat!</p>
-                                <p className="hidden md:block">You're now chatting with a random stranger. Say hi!</p>
-                                <p className="md:hidden">Say hi to a stranger!</p>
+                {/* Right Column: Chat Interface (70% on Desktop) */}
+                <div className="flex-1 md:w-[70%] flex flex-col bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden h-full min-h-0">
+                    {/* Chat Messages Area */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white relative">
+                        <div className="py-4 space-y-2">
+                            <h2 className="font-bold text-gray-900 text-xl">Welcome to LayzeeChat.</h2>
+                            <div className="text-sm text-gray-800 space-y-1">
+                                <p className="flex items-center gap-2 font-semibold text-[#6929F6]">
+                                    <span className="border border-[#6929F6] rounded-full w-5 h-5 flex items-center justify-center text-xs">18</span>
+                                    You must be 18+
+                                </p>
+                                <p>No nudity, hate speech, or harassment</p>
+                                <p>Your webcam must show you, live</p>
+                                <p>Do not ask for gender. This is not a dating site</p>
+                                <p>Violators will be banned</p>
                             </div>
-
-                            {/* Messages */}
-                            {messages.map((msg, index) => (
-                                <div
-                                    key={msg.id || index}
-                                    className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-                                >
-                                    <div
-                                        className={`max-w-[80%] md:max-w-[70%] px-3 md:px-4 py-2 rounded-lg ${msg.sender === 'me'
-                                                ? 'bg-google-blue text-white rounded-br-none'
-                                                : 'bg-gray-200 text-gray-800 rounded-bl-none'
-                                            }`}
-                                    >
-                                        <p className="text-xs md:text-sm break-words">{msg.text}</p>
-                                        {msg.timestamp && (
-                                            <span className="text-[10px] md:text-xs opacity-70 mt-1 block">
-                                                {new Date(msg.timestamp).toLocaleTimeString([], {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                })}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                            <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Chat Input */}
-                        <div className="border-t border-gray-200 p-2 md:p-4 bg-gray-50">
-                            <div className="flex items-center gap-2">
+                        {messages.map((msg, index) => (
+                            <div
+                                key={msg.id || index}
+                                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${msg.sender === 'me'
+                                        ? 'bg-[#6929F6] text-white rounded-br-none'
+                                        : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                                        }`}
+                                >
+                                    <p className="break-words">{msg.text}</p>
+                                </div>
+                            </div>
+                        ))}
+
+                        {/* Searching Status Overlay in Chat */}
+                        {isSearching && (
+                            <div className="flex justify-center my-4">
+                                <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 animate-pulse">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Searching for partner...
+                                </div>
+                            </div>
+                        )}
+
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Chat Input & Controls Bar */}
+                    <div className="p-3 bg-white border-t border-gray-100">
+                        <div className="flex gap-3 h-14">
+                            {/* Large Start Button */}
+                            <button
+                                onClick={partnerId ? handleNext : () => startChat(tags)}
+                                disabled={isSearching}
+                                className={`
+                                    h-full px-8 font-bold text-white text-lg rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center
+                                    ${partnerId
+                                        ? 'bg-gray-800 hover:bg-gray-900' // Stop/Next style
+                                        : 'bg-[#6929F6] hover:bg-[#5b22d6]' // Start style
+                                    }
+                                    disabled:opacity-50 disabled:cursor-not-allowed min-w-[100px]
+                                `}
+                            >
+                                {isSearching ? (
+                                    <Loader2 className="w-6 h-6 animate-spin" />
+                                ) : (
+                                    partnerId ? "Stop" : "Start"
+                                )}
+                            </button>
+
+                            {/* Input Area */}
+                            <div className="flex-1 relative h-full">
                                 <input
                                     type="text"
                                     value={messageInput}
                                     onChange={(e) => setMessageInput(e.target.value)}
                                     onKeyPress={handleKeyPress}
-                                    placeholder={partnerId ? "Type a message..." : "Waiting..."}
+                                    placeholder={partnerId ? "Type a message..." : ""}
                                     disabled={!partnerId || isSearching}
-                                    className="flex-1 px-3 md:px-4 py-2 rounded-full border border-gray-300 bg-white text-sm md:text-base text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-google-blue focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full h-full pl-4 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-[#6929F6] focus:ring-1 focus:ring-[#6929F6] bg-white disabled:bg-gray-50 text-lg"
                                 />
                                 <button
                                     onClick={handleSendMessage}
-                                    disabled={!messageInput.trim() || !partnerId || isSearching}
-                                    className="p-2 md:p-2.5 bg-google-blue text-white rounded-full hover:bg-[#5a95f5] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 touch-manipulation"
-                                    title="Send message"
+                                    disabled={!messageInput.trim() || !partnerId}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#6929F6] text-white rounded-lg hover:bg-[#5b22d6] disabled:opacity-50 disabled:bg-gray-300 transition-colors"
                                 >
-                                    <Send className="w-4 h-4 md:w-5 md:h-5" />
+                                    <Send className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Control Buttons */}
-                    <div className="mt-2 md:mt-4 flex items-center gap-2 md:gap-3">
-                        <button
-                            onClick={handleNext}
-                            disabled={isSearching}
-                            className="flex-1 px-4 md:px-5 py-2.5 md:py-3 bg-google-red text-white rounded-lg font-body font-bold text-sm md:text-base hover:bg-[#e55347] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 active:scale-95 touch-manipulation"
-                        >
-                            <SkipForward className="w-4 h-4 md:w-5 md:h-5" />
-                            Next
-                        </button>
                         {partnerId && (
-                            <button
-                                onClick={reportUser}
-                                className="px-4 md:px-5 py-2.5 md:py-3 bg-gray-200 text-gray-700 rounded-lg text-sm md:text-base hover:bg-gray-300 transition-all flex items-center gap-2 active:scale-95 touch-manipulation"
-                                title="Report user"
-                            >
-                                <Flag className="w-4 h-4 md:w-5 md:h-5" />
-                                <span className="hidden sm:inline">Report</span>
-                            </button>
+                            <div className="mt-2 flex justify-end px-1">
+                                <button
+                                    onClick={handleNext}
+                                    className="text-xs font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider flex items-center gap-1"
+                                >
+                                    Next Stranger <SkipForward className="w-3 h-3" />
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

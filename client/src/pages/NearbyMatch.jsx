@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Navigation, Users, ArrowLeft, Loader2, X } from 'lucide-react';
+import { MapPin, Navigation, Users, ArrowLeft, Loader2, X, Send, SkipForward, Flag } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
 import VideoContainer from '../components/VideoContainer';
-import ChatBox from '../components/ChatBox';
 
 const NearbyMatch = () => {
     const navigate = useNavigate();
@@ -17,13 +16,24 @@ const NearbyMatch = () => {
         stream,
         messages,
         sendMessage,
-        nextPartner
+        nextPartner,
+        isSearching,
+        stopMedia
     } = useSocket();
 
     const [location, setLocation] = useState(null);
     const [error, setError] = useState(null);
     const [radius, setRadius] = useState(5000); // Default 5km
     const [status, setStatus] = useState('idle'); // idle, locating, searching, found
+    const [messageInput, setMessageInput] = useState('');
+    const messagesEndRef = useRef(null);
+
+    // Cleanup media on unmount
+    useEffect(() => {
+        return () => {
+            stopMedia();
+        };
+    }, []);
 
     useEffect(() => {
         if (partnerId) {
@@ -49,6 +59,10 @@ const NearbyMatch = () => {
             socket.off('nearby-error', handleError);
         };
     }, [partnerId, socket]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     const getLocation = () => {
         setStatus('locating');
@@ -93,52 +107,185 @@ const NearbyMatch = () => {
     };
 
     const handleBack = () => {
-        // If in a call, end it?
         if (partnerId) {
-            nextPartner(); // Or just disconnect
+            nextPartner(); // Disconnect if in call
         }
         navigate('/');
     };
 
-    // --- Render Video Chat Interface if Matched ---
+    const handleSendMessage = () => {
+        if (messageInput.trim() && partnerId) {
+            sendMessage(messageInput);
+            setMessageInput('');
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
+
+    // --- Render Video Chat Interface if Matched or Searching ---
     if (status === 'found' || partnerId) {
         return (
-            <div className="h-screen bg-gray-900 flex flex-col">
+            <div className="h-screen bg-gray-100 flex flex-col font-sans">
                 {/* Header */}
-                <div className="bg-gray-800 p-4 flex items-center justify-between shadow-md z-10">
-                    <div className="flex items-center gap-2 text-white">
-                        <MapPin className="w-5 h-5 text-google-green" />
-                        <span className="font-bold">Nearby Match</span>
-                        <span className="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">
-                            Within {radius / 1000}km
+                <header className="flex-none flex items-center justify-between px-4 py-2 bg-white border-b border-gray-200 shadow-sm z-10">
+                    <div className="flex items-center gap-2">
+                        <div className="font-display text-xl md:text-2xl font-bold tracking-tight">
+                            <span className="text-[#4285F4]">L</span>
+                            <span className="text-[#EA4335]">a</span>
+                            <span className="text-[#FBBC05]">y</span>
+                            <span className="text-[#4285F4]">z</span>
+                            <span className="text-[#34A853]">e</span>
+                            <span className="text-[#EA4335]">e</span>
+                            <span className="text-[#4285F4]">C</span>
+                            <span className="text-[#FBBC05]">h</span>
+                            <span className="text-[#34A853]">a</span>
+                            <span className="text-[#EA4335]">t</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-semibold rounded border border-blue-100 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {radius / 1000}km Radius
                         </span>
+                        <button
+                            onClick={handleBack}
+                            className="p-2 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                            title="Exit Nearby Match"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
-                    <button
-                        onClick={handleBack}
-                        className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                </header>
 
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                    {/* Video Area */}
-                    <div className="flex-1 p-4 relative">
-                        <VideoContainer
-                            localStream={stream}
-                            myVideoRef={myVideo}
-                            userVideoRef={userVideo}
-                            callAccepted={callAccepted}
-                        />
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden p-2 md:p-4 gap-2 md:gap-4 max-w-[1600px] mx-auto w-full">
+
+                    {/* Left Column: Videos (30% on Desktop, PiP on Mobile) */}
+                    <div className="flex-none md:w-[30%] flex flex-col h-[45vh] md:h-auto min-h-0 relative">
+                        {/* Video Wrapper: Relative for Mobile PiP, Flex-Col for Desktop Stack */}
+                        <div className="flex-1 relative md:flex md:flex-col md:gap-4">
+
+                            {/* Partner Video */}
+                            <div className="absolute inset-0 md:relative md:inset-auto md:flex-1 bg-black rounded-xl overflow-hidden shadow-sm border border-gray-300 z-0">
+                                <video
+                                    playsInline
+                                    autoPlay
+                                    ref={userVideo}
+                                    className={`w-full h-full object-cover ${!callAccepted ? 'hidden' : ''}`}
+                                />
+                                {!callAccepted && (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#404040] text-white p-4 text-center">
+                                        <div className="flex flex-col items-center gap-3">
+                                            {/* Always show searching state here if not connected */}
+                                            <Loader2 className="w-10 h-10 animate-spin text-white/50" />
+                                            <p className="font-medium text-lg text-white/80">Searching for partner...</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* My Video */}
+                            <div className="absolute top-3 right-3 w-24 h-32 md:static md:w-auto md:h-auto md:flex-1 bg-black rounded-lg md:rounded-xl overflow-hidden border-2 border-white/20 md:border md:border-gray-300 shadow-lg md:shadow-sm z-10">
+                                <video
+                                    playsInline
+                                    muted
+                                    autoPlay
+                                    ref={myVideo}
+                                    className={`w-full h-full object-cover transform scale-x-[-1] ${!stream ? 'hidden' : ''}`}
+                                />
+                                {!stream && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-xs text-gray-500">
+                                        No Cam
+                                    </div>
+                                )}
+                                <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/50 rounded text-[10px] md:text-xs text-white font-medium backdrop-blur-sm">
+                                    You
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Chat Area (Optional sidebar or overlay) */}
-                    <div className="w-full md:w-80 bg-white border-l border-gray-200 flex flex-col">
-                        <ChatBox
-                            messages={messages}
-                            onSendMessage={sendMessage}
-                        />
+                    {/* Right Column: Chat Interface (70% on Desktop) */}
+                    <div className="flex-1 md:w-[70%] flex flex-col bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden h-full min-h-0">
+                        {/* Chat Messages Area */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white relative">
+                            <div className="py-4 space-y-2">
+                                <h2 className="font-bold text-gray-900 text-xl">Nearby Match</h2>
+                                <div className="text-sm text-gray-800 space-y-1">
+                                    <p>Connected with someone within {radius / 1000}km.</p>
+                                    <p>Be respectful and have fun!</p>
+                                </div>
+                            </div>
+
+                            {messages.map((msg, index) => (
+                                <div
+                                    key={msg.id || index}
+                                    className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div
+                                        className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm ${msg.sender === 'me'
+                                            ? 'bg-[#6929F6] text-white rounded-br-none'
+                                            : 'bg-gray-100 text-gray-900 rounded-bl-none'
+                                            }`}
+                                    >
+                                        <p className="break-words">{msg.text}</p>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Searching Status Overlay in Chat */}
+                            {!callAccepted && (
+                                <div className="flex justify-center my-4">
+                                    <div className="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 animate-pulse">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        Searching for partner...
+                                    </div>
+                                </div>
+                            )}
+
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Chat Input & Controls Bar */}
+                        <div className="p-3 bg-white border-t border-gray-100">
+                            <div className="flex gap-3 h-14">
+                                {/* Stop/Next Button */}
+                                <button
+                                    onClick={handleFindMatch} // Re-trigger search
+                                    className={`
+                                        h-full px-8 font-bold text-white text-lg rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center
+                                        bg-gray-800 hover:bg-gray-900 min-w-[100px]
+                                    `}
+                                >
+                                    Next
+                                </button>
+
+                                {/* Input Area */}
+                                <div className="flex-1 relative h-full">
+                                    <input
+                                        type="text"
+                                        value={messageInput}
+                                        onChange={(e) => setMessageInput(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        placeholder={partnerId ? "Type a message..." : "Waiting for partner..."}
+                                        disabled={!partnerId}
+                                        className="w-full h-full pl-4 pr-12 rounded-xl border border-gray-200 focus:outline-none focus:border-[#6929F6] focus:ring-1 focus:ring-[#6929F6] bg-white disabled:bg-gray-50 text-lg"
+                                    />
+                                    <button
+                                        onClick={handleSendMessage}
+                                        disabled={!messageInput.trim() || !partnerId}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#6929F6] text-white rounded-lg hover:bg-[#5b22d6] disabled:opacity-50 disabled:bg-gray-300 transition-colors"
+                                    >
+                                        <Send className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -244,7 +391,7 @@ const NearbyMatch = () => {
                                 {status === 'searching' ? (
                                     <>
                                         <Loader2 className="w-6 h-6 animate-spin" />
-                                        Scanning Area...
+                                        Searching for partner...
                                     </>
                                 ) : status === 'no-match' ? (
                                     <>

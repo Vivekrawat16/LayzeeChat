@@ -90,7 +90,7 @@ module.exports = (io) => {
             }
         });
 
-        socket.on('find-nearby', async ({ radius = 5000, location }) => { // radius in meters
+        socket.on('find-nearby', async ({ radius = 100000, location }) => { // radius in meters
             console.log(`📍 User ${socket.id} looking for nearby match within ${radius}m`);
             try {
                 // Ensure user is in DB with current location (fixes race condition)

@@ -262,6 +262,15 @@ export const SocketProvider = ({ children }) => {
     };
 
 
+    const stopMedia = () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+        resetCall();
+        setIsSearching(false);
+    };
+
     return (
         <SocketContext.Provider value={{
             socket,
@@ -279,6 +288,7 @@ export const SocketProvider = ({ children }) => {
             reportUser,
             startChat,
             enableMedia,
+            stopMedia,
             onlineUsers,
             matchedTag
         }}>
