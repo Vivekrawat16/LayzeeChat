@@ -155,6 +155,7 @@ module.exports = (io) => {
 
             } catch (err) {
                 console.error('Error finding nearby:', err);
+                socket.emit('nearby-error', { message: 'Database connection failed' });
             }
         });
 

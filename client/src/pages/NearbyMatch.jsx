@@ -31,13 +31,22 @@ const NearbyMatch = () => {
         }
 
         const handleNoMatch = () => {
+            console.log('⚠️ Received no-nearby-found event from server');
             setStatus('no-match');
         };
 
+        const handleError = ({ message }) => {
+            console.error('Nearby error:', message);
+            setError(message || 'Connection error');
+            setStatus('idle');
+        };
+
         socket.on('no-nearby-found', handleNoMatch);
+        socket.on('nearby-error', handleError);
 
         return () => {
             socket.off('no-nearby-found', handleNoMatch);
+            socket.off('nearby-error', handleError);
         };
     }, [partnerId, socket]);
 
