@@ -166,7 +166,7 @@ const NearbyMatch = () => {
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden p-2 md:p-4 gap-2 md:gap-4 max-w-[1600px] mx-auto w-full">
 
                     {/* Left Column: Videos (30% on Desktop, PiP on Mobile) */}
-                    <div className="flex-none md:w-[30%] flex flex-col h-[45vh] md:h-auto min-h-0 relative">
+                    <div className="flex-none md:w-[30%] flex flex-col h-[45vh] md:h-full min-h-0 relative">
                         {/* Video Wrapper: Relative for Mobile PiP, Flex-Col for Desktop Stack */}
                         <div className="flex-1 relative md:flex md:flex-col md:gap-4">
 
