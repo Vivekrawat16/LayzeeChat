@@ -171,7 +171,7 @@ export const SocketProvider = ({ children }) => {
 
     const findPartner = (tags = []) => {
         console.log('🔍 Finding partner with tags:', tags);
-        if (stream) {
+        if (streamRef.current) {
             setIsSearching(true);
             setMatchedTag(null);
             resetCall();
@@ -191,6 +191,7 @@ export const SocketProvider = ({ children }) => {
             }
 
         } else {
+            console.warn("⚠️ findPartner called but no stream available in ref");
             alert("Please allow camera/microphone access first.");
         }
     };
