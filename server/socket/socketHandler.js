@@ -173,6 +173,32 @@ module.exports = (io) => {
             // Here we could log to DB, ban user, etc.
         });
 
+        socket.on('leaveChat', async () => {
+            console.log('User Left Chat:', socket.id);
+
+            // Cleanup Standard Queue
+            queue = queue.filter(u => u.id !== socket.id);
+
+            // Cleanup Nearby DB
+            try {
+                await NearbyUser.deleteOne({ socketId: socket.id });
+            } catch (err) {
+                console.error('Error removing nearby user:', err);
+            }
+
+            const partnerId = pairings.get(socket.id);
+            if (partnerId) {
+                io.to(partnerId).emit('partnerDisconnected');
+                pairings.delete(partnerId);
+                pairings.delete(socket.id);
+
+                // If they were in nearby mode, free the partner
+                try {
+                    await NearbyUser.updateOne({ socketId: partnerId }, { isBusy: false });
+                } catch (e) { }
+            }
+        });
+
         socket.on('disconnect', async () => {
             console.log('User Disconnected:', socket.id);
             io.emit('userCount', io.engine.clientsCount); // Update count on disconnect

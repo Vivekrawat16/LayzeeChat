@@ -46,7 +46,8 @@ export const SocketProvider = ({ children }) => {
     const [onlineUsers, setOnlineUsers] = useState(0);
     const [matchedTag, setMatchedTag] = useState(null);
     const searchTimeoutRef = useRef(null);
-
+    const streamRef = useRef(null);
+    const isStreamActiveRef = useRef(false);
 
     const myVideo = useRef();
     const userVideo = useRef();
@@ -135,7 +136,7 @@ export const SocketProvider = ({ children }) => {
         console.log(`🚀 Initiating peer connection. Initiator: ${initiator}, Partner: ${partnerId}`);
         const peer = new Peer({
             initiator,
-            trickle: false,
+            trickle: true,
             stream: currentStream,
             config: {
                 iceServers: [
@@ -228,11 +229,26 @@ export const SocketProvider = ({ children }) => {
         findPartner(tags);
     };
 
+    const mediaRequestId = useRef(0);
 
     const enableMedia = async () => {
+        const myRequestId = ++mediaRequestId.current;
         try {
+            console.log(`📷 Requesting media access... (Request ID: ${myRequestId})`);
+            isStreamActiveRef.current = true; // Mark as active before requesting
+
             const currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+            // Check if we were stopped while waiting for stream OR if a newer request started
+            if (!isStreamActiveRef.current || mediaRequestId.current !== myRequestId) {
+                console.log(`🛑 Stream acquired but invalid. Stopping tracks immediately. (Request ID: ${myRequestId}, Current ID: ${mediaRequestId.current}, Active: ${isStreamActiveRef.current})`);
+                currentStream.getTracks().forEach(track => track.stop());
+                return null;
+            }
+
+            console.log(`✅ Media access granted. Stream ID: ${currentStream.id} (Request ID: ${myRequestId})`);
             setStream(currentStream);
+            streamRef.current = currentStream; // Store in ref for cleanup
             if (myVideo.current) {
                 myVideo.current.srcObject = currentStream;
             }
@@ -261,16 +277,37 @@ export const SocketProvider = ({ children }) => {
         }
     };
 
-
     const stopMedia = () => {
+        console.log('🛑 stopMedia called. Stopping tracks...');
+        isStreamActiveRef.current = false; // Mark as inactive immediately
+
+        // Use ref to ensure we have the latest stream object even in stale closures
+        if (streamRef.current) {
+            console.log('🛑 Stopping tracks for stream ID:', streamRef.current.id);
+            streamRef.current.getTracks().forEach(track => {
+                console.log('🛑 Stopping track:', track.kind, track.label);
+                track.stop();
+            });
+            streamRef.current = null;
+        }
+
+        // Double check state stream just in case
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
-            setStream(null);
         }
+
+        if (myVideo.current) {
+            myVideo.current.srcObject = null;
+        }
+        if (userVideo.current) {
+            userVideo.current.srcObject = null;
+        }
+
+        setStream(null);
+        socket.emit('leaveChat');
         resetCall();
         setIsSearching(false);
     };
-
     return (
         <SocketContext.Provider value={{
             socket,

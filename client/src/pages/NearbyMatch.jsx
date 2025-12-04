@@ -344,7 +344,7 @@ const NearbyMatch = () => {
                         <input
                             type="range"
                             min="1000"
-                            max="50000"
+                            max="100000"
                             step="1000"
                             value={radius}
                             onChange={(e) => setRadius(Number(e.target.value))}
@@ -352,7 +352,7 @@ const NearbyMatch = () => {
                         />
                         <div className="flex justify-between text-xs text-gray-400 font-mono">
                             <span>1km</span>
-                            <span>50km</span>
+                            <span>100km</span>
                         </div>
                     </div>
 
