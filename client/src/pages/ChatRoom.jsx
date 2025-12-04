@@ -20,7 +20,9 @@ const ChatRoom = () => {
         stopMedia,
         onlineUsers,
         matchedTag,
-        isMirrored // Add this
+        isMirrored, // Add this
+        faceDetected, // Add this
+        setIsInChatRoom // Add this
     } = useSocket();
 
     const location = useLocation();
@@ -30,11 +32,15 @@ const ChatRoom = () => {
     const [messageInput, setMessageInput] = useState('');
 
     useEffect(() => {
+        // Set guard to true when entering chat
+        setIsInChatRoom(true);
+
         // Start media and search when entering chat, passing selected tags
         startChat(tags);
 
         // Cleanup media on unmount
         return () => {
+            setIsInChatRoom(false); // Set guard to false immediately
             stopMedia();
         };
     }, []);
@@ -150,6 +156,18 @@ const ChatRoom = () => {
                                     No Cam
                                 </div>
                             )}
+
+                            {/* Face Detection Warning */}
+                            {!faceDetected && stream && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-30 p-2 text-center">
+                                    <div className="text-white text-xs md:text-sm font-bold flex flex-col items-center gap-1">
+                                        <span className="text-xl">🚫</span>
+                                        No person detected
+                                        <span className="text-[10px] md:text-xs font-normal opacity-80">Please look at the camera</span>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/50 rounded text-[10px] md:text-xs text-white font-medium backdrop-blur-sm z-20">
                                 You
                             </div>
@@ -204,6 +222,15 @@ const ChatRoom = () => {
                             </div>
                         )}
 
+                        {/* Face Detection Warning in Chat */}
+                        {!faceDetected && stream && (
+                            <div className="flex justify-center my-4">
+                                <div className="bg-red-50 text-red-600 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 border border-red-100">
+                                    🚫 No person detected — Please look at the camera
+                                </div>
+                            </div>
+                        )}
+
                         <div ref={messagesEndRef} />
                     </div>
 
@@ -213,7 +240,7 @@ const ChatRoom = () => {
                             {/* Large Start Button */}
                             <button
                                 onClick={partnerId ? handleNext : () => startChat(tags)}
-                                disabled={isSearching}
+                                disabled={isSearching || (!faceDetected && stream)} // Disable if searching OR no face detected (but allow if no stream yet, so they can start)
                                 className={`
                                     h-full px-8 font-bold text-white text-lg rounded-xl shadow-sm transition-all active:scale-95 flex items-center justify-center
                                     ${partnerId

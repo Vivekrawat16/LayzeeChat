@@ -2,6 +2,8 @@ import React, { createContext, useState, useRef, useEffect, useContext } from 'r
 import { io } from 'socket.io-client';
 import Peer from 'simple-peer';
 import { filterMessage } from '../utils/filter';
+import { FaceDetection } from "@mediapipe/face_detection";
+import { Camera } from "@mediapipe/camera_utils";
 
 // Polyfills are handled by vite-plugin-node-polyfills in vite.config.js
 // Do not manually overwrite window.Buffer or window.process here as it breaks the polyfill
@@ -45,6 +47,8 @@ export const SocketProvider = ({ children }) => {
     const [messages, setMessages] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState(0);
     const [matchedTag, setMatchedTag] = useState(null);
+    const [faceDetected, setFaceDetected] = useState(false); // New state for face detection
+    const [isInChatRoom, setIsInChatRoom] = useState(false); // Guard for auto-resume
     const searchTimeoutRef = useRef(null);
     const streamRef = useRef(null);
     const isStreamActiveRef = useRef(false);
@@ -52,9 +56,13 @@ export const SocketProvider = ({ children }) => {
     const myVideo = useRef();
     const userVideo = useRef();
     const connectionRef = useRef();
+    const faceDetectorRef = useRef(null);
+    const cameraRef = useRef(null);
 
     useEffect(() => {
         socket.on('me', (id) => setMe(id));
+        // ... (existing code) ...
+
 
         socket.on('userCount', (count) => {
             setOnlineUsers(count);
@@ -135,6 +143,70 @@ export const SocketProvider = ({ children }) => {
         };
     }, []);
 
+    // Initialize MediaPipe Face Detection
+    useEffect(() => {
+        const faceDetection = new FaceDetection({
+            locateFile: (file) => {
+                return `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${file}`;
+            }
+        });
+
+        faceDetection.setOptions({
+            model: 'short',
+            minDetectionConfidence: 0.5
+        });
+
+        faceDetection.onResults((results) => {
+            // Ignore results if stream is not active (e.g. stopped)
+            if (!isStreamActiveRef.current) return;
+
+            if (results.detections.length > 0) {
+                setFaceDetected(prev => !prev ? true : prev);
+            } else {
+                setFaceDetected(prev => prev ? false : prev);
+            }
+        });
+
+        faceDetectorRef.current = faceDetection;
+
+        return () => {
+            if (faceDetectorRef.current) {
+                faceDetectorRef.current.close();
+            }
+        };
+    }, []);
+
+    // Initialize Camera when stream is available
+    useEffect(() => {
+        if (stream && myVideo.current && faceDetectorRef.current) {
+            const camera = new Camera(myVideo.current, {
+                onFrame: async () => {
+                    await faceDetectorRef.current.send({ image: myVideo.current });
+                },
+                width: 640,
+                height: 480
+            });
+            camera.start();
+            cameraRef.current = camera;
+        }
+
+        return () => {
+            if (cameraRef.current) {
+                cameraRef.current.stop();
+                cameraRef.current = null;
+            }
+        };
+    }, [stream]);
+
+    // Auto-resume matchmaking when face is detected
+    // Auto-resume matchmaking when face is detected
+    useEffect(() => {
+        if (isInChatRoom && faceDetected && !isSearching && !partnerId && !callAccepted) {
+            findPartner();
+        }
+    }, [faceDetected, isSearching, partnerId, callAccepted, isInChatRoom]);
+
+
 
     const initiatePeer = (partnerId, initiator, currentStream) => {
         console.log(`🚀 Initiating peer connection. Initiator: ${initiator}, Partner: ${partnerId}`);
@@ -171,6 +243,13 @@ export const SocketProvider = ({ children }) => {
 
     const findPartner = (tags = []) => {
         console.log('🔍 Finding partner with tags:', tags);
+
+        // Face Detection Check
+        if (!faceDetected) {
+            console.warn("Search paused — No face detected");
+            return; // DO NOT start matchmaking
+        }
+
         if (streamRef.current) {
             setIsSearching(true);
             setMatchedTag(null);
@@ -192,7 +271,8 @@ export const SocketProvider = ({ children }) => {
 
         } else {
             console.warn("⚠️ findPartner called but no stream available in ref");
-            alert("Please allow camera/microphone access first.");
+            // alert("Please allow camera/microphone access first."); 
+            // Commented out alert to avoid spamming if auto-resume triggers it
         }
     };
 
@@ -257,6 +337,10 @@ export const SocketProvider = ({ children }) => {
             if (myVideo.current) {
                 myVideo.current.srcObject = currentStream;
             }
+
+            // Refresh device list now that we have permissions (to get labels)
+            getDevices();
+
             return currentStream;
         } catch (err) {
             console.error('Failed to get stream', err);
@@ -271,10 +355,14 @@ export const SocketProvider = ({ children }) => {
 
             // We can't rely on 'stream' state being updated immediately for findPartner check
             // So we bypass the check or pass true
-            setIsSearching(true);
+            // setIsSearching(true); // Removed this because findPartner sets it, and we want to respect the face check
             resetCall();
 
             // Initial search with provided tags
+            // Note: findPartner will fail if faceDetected is false (which it is initially).
+            // But the Camera effect will kick in, detect face, and trigger auto-resume.
+            // So we don't need to call findPartner here?
+            // Or we call it, it returns early, then auto-resume takes over.
             findPartner(tags);
 
         } catch (err) {
@@ -285,6 +373,13 @@ export const SocketProvider = ({ children }) => {
     const stopMedia = () => {
         console.log('🛑 stopMedia called. Stopping tracks...');
         isStreamActiveRef.current = false; // Mark as inactive immediately
+
+        // Stop MediaPipe Camera instance if it exists
+        if (cameraRef.current) {
+            console.log('🛑 Stopping MediaPipe Camera instance');
+            cameraRef.current.stop();
+            cameraRef.current = null;
+        }
 
         // Use ref to ensure we have the latest stream object even in stale closures
         if (streamRef.current) {
@@ -309,6 +404,7 @@ export const SocketProvider = ({ children }) => {
         }
 
         setStream(null);
+        setFaceDetected(false); // Reset face detection
         socket.emit('leaveChat');
         resetCall();
         setIsSearching(false);
@@ -328,33 +424,30 @@ export const SocketProvider = ({ children }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Enumerate devices with permission request
-    useEffect(() => {
-        const getDevices = async () => {
-            try {
-                // Request permissions first to ensure labels are available
-                await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    // Enumerate devices
+    const getDevices = async () => {
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
 
-                const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoInputs = devices.filter(device => device.kind === 'videoinput');
+            const audioInputs = devices.filter(device => device.kind === 'audioinput');
 
-                const videoInputs = devices.filter(device => device.kind === 'videoinput');
-                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+            setVideoDevices(videoInputs);
+            setAudioDevices(audioInputs);
 
-                setVideoDevices(videoInputs);
-                setAudioDevices(audioInputs);
-
-                // Set default selection if not set
-                if (videoInputs.length > 0 && !selectedVideoDeviceId) {
-                    setSelectedVideoDeviceId(videoInputs[0].deviceId);
-                }
-                if (audioInputs.length > 0 && !selectedAudioDeviceId) {
-                    setSelectedAudioDeviceId(audioInputs[0].deviceId);
-                }
-            } catch (err) {
-                console.error("Error enumerating devices:", err);
+            // Set default selection if not set
+            if (videoInputs.length > 0 && !selectedVideoDeviceId) {
+                setSelectedVideoDeviceId(videoInputs[0].deviceId);
             }
-        };
+            if (audioInputs.length > 0 && !selectedAudioDeviceId) {
+                setSelectedAudioDeviceId(audioInputs[0].deviceId);
+            }
+        } catch (err) {
+            console.error("Error enumerating devices:", err);
+        }
+    };
 
+    useEffect(() => {
         getDevices();
         navigator.mediaDevices.addEventListener('devicechange', getDevices);
 
@@ -470,7 +563,9 @@ export const SocketProvider = ({ children }) => {
             switchAudioDevice,
             isMirrored,
             toggleMirror,
-            isDesktop
+            isDesktop,
+            faceDetected, // Expose faceDetected
+            setIsInChatRoom // Expose guard setter
         }}>
             {children}
         </SocketContext.Provider>
