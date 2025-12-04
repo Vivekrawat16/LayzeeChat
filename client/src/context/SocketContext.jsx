@@ -104,11 +104,17 @@ export const SocketProvider = ({ children }) => {
     }, []);
 
     // Refactored socket listener to access current stream
+    // Socket listener for partner found
     useEffect(() => {
-        if (!stream) return;
-
         const handlePartnerFound = ({ partnerId, initiator, matchedTag }) => {
-            console.log('🎯 Partner found (with stream)!', { partnerId, initiator, matchedTag, hasStream: !!stream });
+            console.log('🎯 Partner found!', { partnerId, initiator, matchedTag });
+
+            const currentStream = streamRef.current;
+            if (!currentStream) {
+                console.error('❌ Partner found but no stream available!');
+                return;
+            }
+
             setIsSearching(false);
             setPartnerId(partnerId);
             setMatchedTag(matchedTag);
@@ -119,17 +125,15 @@ export const SocketProvider = ({ children }) => {
                 searchTimeoutRef.current = null;
             }
 
-            initiatePeer(partnerId, initiator, stream);
+            initiatePeer(partnerId, initiator, currentStream);
         };
-
-
 
         socket.on('partnerFound', handlePartnerFound);
 
         return () => {
             socket.off('partnerFound', handlePartnerFound);
         };
-    }, [stream]);
+    }, []);
 
 
     const initiatePeer = (partnerId, initiator, currentStream) => {
