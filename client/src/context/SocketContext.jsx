@@ -313,6 +313,135 @@ export const SocketProvider = ({ children }) => {
         resetCall();
         setIsSearching(false);
     };
+    const [videoDevices, setVideoDevices] = useState([]);
+    const [audioDevices, setAudioDevices] = useState([]);
+    const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState(null);
+    const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState(null);
+    const [isMirrored, setIsMirrored] = useState(false);
+
+    // Check for desktop environment
+    const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsDesktop(window.innerWidth > 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Enumerate devices with permission request
+    useEffect(() => {
+        const getDevices = async () => {
+            try {
+                // Request permissions first to ensure labels are available
+                await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                const videoInputs = devices.filter(device => device.kind === 'videoinput');
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+
+                setVideoDevices(videoInputs);
+                setAudioDevices(audioInputs);
+
+                // Set default selection if not set
+                if (videoInputs.length > 0 && !selectedVideoDeviceId) {
+                    setSelectedVideoDeviceId(videoInputs[0].deviceId);
+                }
+                if (audioInputs.length > 0 && !selectedAudioDeviceId) {
+                    setSelectedAudioDeviceId(audioInputs[0].deviceId);
+                }
+            } catch (err) {
+                console.error("Error enumerating devices:", err);
+            }
+        };
+
+        getDevices();
+        navigator.mediaDevices.addEventListener('devicechange', getDevices);
+
+        return () => {
+            navigator.mediaDevices.removeEventListener('devicechange', getDevices);
+        };
+    }, []);
+
+    const switchVideoDevice = async (deviceId) => {
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: deviceId } },
+                audio: false // We only want the video track
+            });
+
+            const newVideoTrack = newStream.getVideoTracks()[0];
+
+            if (streamRef.current) {
+                const oldVideoTrack = streamRef.current.getVideoTracks()[0];
+
+                if (oldVideoTrack) {
+                    // Replace track in peer connection
+                    if (connectionRef.current) {
+                        connectionRef.current.replaceTrack(oldVideoTrack, newVideoTrack, streamRef.current);
+                    }
+
+                    // Update local stream ref
+                    streamRef.current.removeTrack(oldVideoTrack);
+                    streamRef.current.addTrack(newVideoTrack);
+
+                    // Stop old track
+                    oldVideoTrack.stop();
+                } else {
+                    streamRef.current.addTrack(newVideoTrack);
+                }
+            }
+
+            // Update local video preview
+            if (myVideo.current) {
+                myVideo.current.srcObject = streamRef.current;
+            }
+
+            setSelectedVideoDeviceId(deviceId);
+        } catch (err) {
+            console.error("Error switching video device:", err);
+        }
+    };
+
+    const switchAudioDevice = async (deviceId) => {
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: false,
+                audio: { deviceId: { exact: deviceId } }
+            });
+
+            const newAudioTrack = newStream.getAudioTracks()[0];
+
+            if (streamRef.current) {
+                const oldAudioTrack = streamRef.current.getAudioTracks()[0];
+
+                if (oldAudioTrack) {
+                    // Replace track in peer connection
+                    if (connectionRef.current) {
+                        connectionRef.current.replaceTrack(oldAudioTrack, newAudioTrack, streamRef.current);
+                    }
+
+                    // Update local stream ref
+                    streamRef.current.removeTrack(oldAudioTrack);
+                    streamRef.current.addTrack(newAudioTrack);
+
+                    // Stop old track
+                    oldAudioTrack.stop();
+                } else {
+                    streamRef.current.addTrack(newAudioTrack);
+                }
+            }
+
+            setSelectedAudioDeviceId(deviceId);
+        } catch (err) {
+            console.error("Error switching audio device:", err);
+        }
+    };
+
+    const toggleMirror = () => {
+        setIsMirrored(prev => !prev);
+    };
+
     return (
         <SocketContext.Provider value={{
             socket,
@@ -332,7 +461,16 @@ export const SocketProvider = ({ children }) => {
             enableMedia,
             stopMedia,
             onlineUsers,
-            matchedTag
+            matchedTag,
+            videoDevices,
+            audioDevices,
+            selectedVideoDeviceId,
+            selectedAudioDeviceId,
+            switchVideoDevice,
+            switchAudioDevice,
+            isMirrored,
+            toggleMirror,
+            isDesktop
         }}>
             {children}
         </SocketContext.Provider>

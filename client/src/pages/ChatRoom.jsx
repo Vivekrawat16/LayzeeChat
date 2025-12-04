@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSocket } from '../context/SocketContext';
-import VideoContainer from '../components/VideoContainer';
+import DeviceSettings from '../components/DeviceSettings';
 import { Send, SkipForward, Flag, Loader2, User } from 'lucide-react';
 
 const ChatRoom = () => {
@@ -19,7 +19,8 @@ const ChatRoom = () => {
         startChat,
         stopMedia,
         onlineUsers,
-        matchedTag
+        matchedTag,
+        isMirrored // Add this
     } = useSocket();
 
     const location = useLocation();
@@ -92,6 +93,8 @@ const ChatRoom = () => {
                         </span>
                         <span className="text-gray-600 font-medium text-xs">{onlineUsers} online</span>
                     </div>
+
+
                 </div>
             </header>
 
@@ -133,22 +136,26 @@ const ChatRoom = () => {
                         {/* My Video */}
                         {/* Mobile: Absolute Top-Right (PiP Overlay) */}
                         {/* Desktop: Relative Flex-1 (Bottom Stack) */}
-                        <div className="absolute top-3 right-3 w-24 h-32 md:static md:w-auto md:h-auto md:flex-1 bg-black rounded-lg md:rounded-xl overflow-hidden border-2 border-white/20 md:border md:border-gray-300 shadow-lg md:shadow-sm z-10">
+                        <div className="group absolute top-3 right-3 w-24 h-32 md:static md:w-auto md:h-auto md:flex-1 bg-black rounded-lg md:rounded-xl overflow-hidden border-2 border-white/20 md:border md:border-gray-300 shadow-lg md:shadow-sm z-10 relative">
                             <video
                                 playsInline
                                 muted
                                 autoPlay
                                 ref={myVideo}
-                                className={`w-full h-full object-cover transform scale-x-[-1] ${!stream ? 'hidden' : ''}`}
+                                className={`w-full h-full object-cover transition-transform duration-300 group-hover:blur-sm ${!stream ? 'hidden' : ''}`}
+                                style={{ transform: isMirrored ? "scaleX(-1)" : "scaleX(1)" }}
                             />
                             {!stream && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-xs text-gray-500">
                                     No Cam
                                 </div>
                             )}
-                            <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/50 rounded text-[10px] md:text-xs text-white font-medium backdrop-blur-sm">
+                            <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 px-1.5 py-0.5 md:px-2 md:py-1 bg-black/50 rounded text-[10px] md:text-xs text-white font-medium backdrop-blur-sm z-20">
                                 You
                             </div>
+
+                            {/* Device Settings Overlay */}
+                            <DeviceSettings />
                         </div>
                     </div>
                 </div>
